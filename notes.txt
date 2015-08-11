@@ -1,0 +1,44 @@
+
+MVP:
+
+LCFC Schedule from USL: http://www.uslsoccer.com/SportSelect.dbml?DB_OEM_ID=32800&SPSID=917141&SPID=157014&Q_SEASON=2015&CONF_SCHOOL_ID=42551
+tag: <a> 
+html:"Watch Live" 
+url: ???
+
+USL Standings: http://www.uslsoccer.com/standings/Standings.dbml?&DB_OEM_ID=32800&DB_OEM_ID=32800
+team: .team <a> .html (remove <strong>) = team name
+column: .overall record
+column: .overall home
+column: .overall away
+
+Process:
+[SETUP].js
+-create [Match Thread]
+-title: "[Match Thread] [vs/@] [Visitor]"
+-body: TEMPLATE
+
+
+[ONGOING].js
+-Search for "Starting XI" and post to [Match Thread]
+-listen to @LouCityMatchDay for minutes ( /^\d{1,2}’/ )
+-change "#LouCity" to "Louisville City FC"
+-remove hashtags ( /\S*#(?:\[[^\]]+\]|\S+)/ )
+-Analyze tweet for @mentions, attempt to fetch and replace with Firstname Lastname ( \S*@(?:\[[^\]]+\]|\S+) )
+-add tweet to [Match Thread] via 'edit'
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////// STRETCH:
+-config script to link any twitter matchday feed with any subreddit (create and update [Match Thread])
+-keep log of goals and penalties, create gifs, update [Match Thread] with gifs when ready.
