@@ -7,13 +7,13 @@ var threadData;
 var data;
 
 var reddit = new Snoocore({
-	userAgent: '/u/dicklangly tapi',
+	userAgent: 'xxx',
 	oauth: {
 		type: 'script',
-		key:'PmwZVwGqsKLKiQ',
+		key:'xxx',
 		secret:'bYT5TYJYS0YXrsxdfNl5MzFngIg',
-		username: 'dicklangly',
-		password: '1005simon',
+		username: 'xxx',
+		password: 'xxx',
 		scope: ['identity','read','vote','submit', 'edit']
 	}
 });
@@ -54,7 +54,7 @@ function editPost(string){
 	});
 }
 
-setTimeout(function(){editPost("farts")}, 5000);
+if editPost("farts")
 	  
 
 // let's upvote every comment, DELETE THIS ALL CAPS STUFF WHEN YOU'RE DONE
