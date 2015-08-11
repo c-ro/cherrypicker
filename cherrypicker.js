@@ -20,10 +20,10 @@ var reddit = new Snoocore({
 	userAgent: '/u/dicklangly tapi',
 	oauth: {
 		type: 'script',
-		key:'PmwZVwGqsKLKiQ',
-		secret:'bYT5TYJYS0YXrsxdfNl5MzFngIg',
-		username: 'dicklangly',
-		password: '1005simon',
+		key:'xxx',
+		secret:'xxx',
+		username: 'xxx',
+		password: 'xxx',
 		scope: ['identity','read','vote','submit', 'edit']
 	}
 });
