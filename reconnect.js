@@ -3,7 +3,7 @@ var Snoocore = require('snoocore');
 var user;
 var threadData;
 var data;
-var matchUpdates = ["0': Everyone is getting hyped."];
+var matchUpdates = [""];
 
 //////  All the info here, ok?
 var matchData = {
@@ -23,20 +23,18 @@ var matchData = {
         url: ""
     },
 
-    sub: ""
+    sub: "",
+
+    id: ""
 };
 
 ///// Get/Store user data object  
 function cherrypicker(){
 	reddit('/api/v1/me').get().then(function(result){
-		// if (result.json.errors.length > 0){
-		// 	console.log("INIT ERROR");
-		// 	console.log(response);
-		// } else {
-			console.log("Logged in " + result.name + " with id: " + result.id);
-			getUserInput();
-			stream();	
-		});
+		console.log("Logged in " + result.name + " with id: " + result.id);
+		getUserInput();
+		stream();		
+	});
 }
 
 ///// Get Input
@@ -45,30 +43,13 @@ function getUserInput(){
 
 	  prompt.start();
 
-	  prompt.get(['targetSub', 'homeTeam', 'homeUsername', 'awayTeam', 'awayUsername', 'stream'], function (err, result) {
+	  prompt.get(['match'], function (err, result) {
 	    if (err) { return onErr(err); }
 	    
-	    console.log('Enter Match Data:');
-	    
-		console.log('  Target Subreddit:' + result.targetSub);
-			matchData.sub = result.targetSub;
-
-	    console.log('  Home Team Name:' + result.homeTeam);
-	    console.log('  Home Team Username:' + result.homeUsername);
-	      matchData.home.team = result.homeTeam;
-	      matchData.home.username = result.homeUsername;
-	    
-	    console.log('  Away Team Name: ' + result.awayTeam);
-	    console.log('  Away Team Username: ' + result.awayUsername);
-	      matchData.away.team = result.awayTeam;
-	      matchData.away.username = result.awayUsername;
-
-	    console.log('  Stream URL: ' + result.stream);
-	      matchData.stream.url = result.stream;
-
-	    console.log(matchData);
+		console.log('  ENTER matchData Object:' + result.match);
+			matchData = result.match;
 	  	
-	  	postPost(makeTitle(),makePost()); ///// MAKE A POST
+	  	getPost(re); ///// GET THE POST
 
 	  });
 
@@ -76,26 +57,18 @@ function getUserInput(){
 	    console.log(err);
 	    return 1;
 	  }
-}
+};
 
 ////// start listening to Twitter
 function stream(){
-	var stream = twitter.stream('user', {screen_name: 'cherrypickerusl'});
+	var stream = twitter.stream('user', {screen_name: 'gnirtsmodnar'})
 
 	stream.on('tweet', function (tweet) {
-
-		var update = tweet.text;
-
-		if(tweet.user.screen_name.toLowerCase() === matchData.home.username && matchMinutes(update) && tweet.text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === matchData.home.username && matchMinutes(update)
-			update = update.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
-			// update = update.boldAllCaps();
-		  	matchUpdates.push(update);
-		  	editPost(makePost());
-		} else {
-			// console.log("non-minute tweet");
+		if(tweet.user.screen_name === matchData.home.username && matchMinutes(tweet.text)) {
+	  	matchUpdates.push(tweet.text);
+	  	editPost(makePost);
 		}
-
-	});
+	})
 }
 
 ///// Is that tweet a match update?
@@ -115,7 +88,7 @@ function postPost(titleText, textText){
 	  kind: "self",
 	  text: textText, //raw markdown
 	  title: titleText,
-	  sr: matchData.sub
+	  sr: "louisvillecityfc"
 	}).then(function(response){
 		
 		if(response.errors){
@@ -124,8 +97,8 @@ function postPost(titleText, textText){
 
 		threadData = response.json.data;
 
-		console.log("CREATED THREAD: " + threadData.url);
-		console.log("POST ID:" + threadData.name);
+		console.log("THREAD DATA: " + threadData.url);
+		console.log("POST ID:" + threadData.id)
 
 	});
 }
@@ -144,9 +117,9 @@ function editPost(string){
 			console.log("EDIT ERROR");
 			console.log(response);
 		} else {
-			var responseData = JSON.stringify(response.data.things.permalink, null, 4); //this works
-			// var permalink = response.json.data.things.permalink; // this maybe not
-			console.log("EDITED: " + responseData);
+			// var responseData = JSON.stringify(response, null, 4); //this works
+			var permalink = response.json.data.things.data.permalink; // this maybe not
+			console.log("EDITED: " + permalink);
 			}	
 		});
 }
@@ -159,25 +132,12 @@ function editPost(string){
 ////
 //
 
-String.prototype.boldAllCaps = function() {
-    var update = this;
-    var caps = update.match(/[A-Z]+/);
-    var bold = "**" + caps[0] + "**";
-    var output = update.replace(/[A-Z]+/, bold);
-    return output;
-};
-
 function makeTitle(){
-	return "[Match Thread] " + matchData.home.team + " vs. " + matchData.away.team; // add match time
-}
+	return "[Match Thread] " + matchData.home.team + " vs. " + matchData.away.team;
+};
 
 function makeHeader(){
     var string = "**" + matchData.home.team + " vs. " + matchData.away.team + "**";
-    return string;
-}
-
-function makeFooter(){
-    var string = "^" + matchData.home.team + " vs. " + matchData.away.team + "**";
     return string;
 }
 
@@ -197,7 +157,7 @@ function makeScore(){
 }
 
 function makeUsernameLink(username){
-    var link = "[" + username + "]" + "(http://www.twitter.com/" + username.slice(0) + ")";
+    var link = "[" + username + "]" + "(http://www.twitter.com/" + username.slice(1) + ")";
     return link;
 }
 
@@ -216,22 +176,22 @@ function makePost(){
 ///// Authenticate Twitter
 
 var twitter = new Twit({
-    consumer_key: '3fs79X6gx1B2wnF9YpFeeAlrB',
-    consumer_secret: 'OOlxitIndqxRCDOuQPIGKyEf0LgT2Ex4Hks5qzmMblYUa2DaIc',
-    access_token: '3418332167-veBdBwS32QwW6wJfEJKLLUHLU3M5KUHX1z1aR5K',
-    access_token_secret: 'hkWwbECEvScqeT1sfrfqR1ewvgBVR7MJ3TcygOan95Dze'
-});
+    consumer_key: 'PwFp8lfHGQzMOrtovLeHO83oE'
+  , consumer_secret: 'rYlRxNV3lwNUBqorfbQz5up2yunGjG8s1dLYRu1RwAgajpHmgL'
+  , access_token: '2378057094-r9uya9WBPOoE7N42HCmb0GKzHqm2DH3CipahuVU'
+  , access_token_secret: 'EUnsQNPuWpfOFixqrNdqHVd1vGzvSXiuLVZAqzdjCXs8B'
+})
 
 ////// Authenticate Reddit
 
 var reddit = new Snoocore({
-	userAgent: '/u/cherrypicker_usl cherrypicker',
+	userAgent: '/u/dicklangly tapi',
 	oauth: {
 		type: 'script',
-		key:'KOgT6trZe17N4w',
-		secret:'Eoh8Blr25UxuO2YCD932htIVSZA',
-		username: 'cherrypicker_usl',
-		password: 'GreenDie6',
+		key:'PmwZVwGqsKLKiQ',
+		secret:'bYT5TYJYS0YXrsxdfNl5MzFngIg',
+		username: 'dicklangly',
+		password: '1005simon',
 		scope: ['identity','read','vote','submit', 'edit']
 	}
 });
