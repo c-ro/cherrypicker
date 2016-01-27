@@ -7,13 +7,13 @@ var threadData;
 var data;
 
 var reddit = new Snoocore({
-	userAgent: 'xxx',
+	userAgent: '/u/dicklangly tapi',
 	oauth: {
 		type: 'script',
-		key:'xxx',
+		key:'PmwZVwGqsKLKiQ',
 		secret:'bYT5TYJYS0YXrsxdfNl5MzFngIg',
-		username: 'xxx',
-		password: 'xxx',
+		username: 'dicklangly',
+		password: '1005simon',
 		scope: ['identity','read','vote','submit', 'edit']
 	}
 });

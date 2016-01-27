@@ -1,3 +1,8 @@
+CURRENT LIMITAIONS:
+-no global error handling/restart protocol
+	-matchData object lost with fatal error
+-manual updates overridden by bot
+
 
 MVP:
 
@@ -14,18 +19,20 @@ column: .overall away
 
 Process:
 [SETUP].js
--create [Match Thread]
--title: "[Match Thread] [vs/@] [Visitor]"
--body: TEMPLATE
+X-create [Match Thread]
+X-title: "[Match Thread] [vs/@] [Visitor]"
+X-body: TEMPLATE
 
 
 [ONGOING].js
--Search for "Starting XI" and post to [Match Thread]
--listen to @LouCityMatchDay for minutes ( /^\d{1,2}’/ )
--change "#LouCity" to "Louisville City FC"
--remove hashtags ( /\S*#(?:\[[^\]]+\]|\S+)/ )
--Analyze tweet for @mentions, attempt to fetch and replace with Firstname Lastname ( \S*@(?:\[[^\]]+\]|\S+) )
--add tweet to [Match Thread] via 'edit'
+- Analyze tweet for @mentions, attempt to fetch and replace with Firstname Lastname ( \S*@(?:\[[^\]]+\]|\S+) )
+
+- [TEAM TWEETERS TOO INCONSISTENT FOR NOW] Search for "Starting XI" and post to [Match Thread]
+- [SHOULD WE ACTUALLY DO THIS?] change "#LouCity" to "Louisville City FC"
+
+X-listen to @LouCityMatchDay for minutes ( /^\d{1,2}’/ )
+X-remove hashtags ( /\S*#(?:\[[^\]]+\]|\S+)/ )
+X-add tweet to [Match Thread] via 'edit'
 
 
 
