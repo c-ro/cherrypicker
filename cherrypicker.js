@@ -4,6 +4,7 @@ var user;
 var threadData;
 var data;
 var matchUpdates = ["0': Everyone is getting hyped."];
+var keys = require('./keys');
 
 //////  All the info here, ok?
 var matchData = {
@@ -215,25 +216,13 @@ function makePost(){
 
 ///// Authenticate Twitter
 
-var twitter = new Twit({
-    consumer_key: '3fs79X6gx1B2wnF9YpFeeAlrB',
-    consumer_secret: 'OOlxitIndqxRCDOuQPIGKyEf0LgT2Ex4Hks5qzmMblYUa2DaIc',
-    access_token: '3418332167-veBdBwS32QwW6wJfEJKLLUHLU3M5KUHX1z1aR5K',
-    access_token_secret: 'hkWwbECEvScqeT1sfrfqR1ewvgBVR7MJ3TcygOan95Dze'
-});
+var twitter = new Twit(keys.twit);
 
 ////// Authenticate Reddit
 
 var reddit = new Snoocore({
 	userAgent: '/u/cherrypicker_usl cherrypicker',
-	oauth: {
-		type: 'script',
-		key:'KOgT6trZe17N4w',
-		secret:'Eoh8Blr25UxuO2YCD932htIVSZA',
-		username: 'cherrypicker_usl',
-		password: 'GreenDie6',
-		scope: ['identity','read','vote','submit', 'edit']
-	}
+	oauth: keys.snoo
 });
 
 cherrypicker();
