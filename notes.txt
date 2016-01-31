@@ -1,7 +1,10 @@
 CURRENT LIMITAIONS:
 -no global error handling/restart protocol
 	-matchData object lost with fatal error
+
 -manual updates overridden by bot
+
+-
 
 
 MVP:
