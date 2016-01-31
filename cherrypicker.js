@@ -3,28 +3,28 @@ var Snoocore = require('snoocore');
 var user;
 var threadData;
 var data;
-var matchUpdates = ["0': Everyone is getting hyped."];
+var matchUpdates = ["0': Nothing has happened."];
 var keys = require('./keys');
 
 //////  All the info here, ok?
 var matchData = {
     home: {
-        team: "",
-        username: "",
+        team: "HOME",
+        username: "cherrypickerusl",
         score: 0
     },
     
     away: {
-        team: "",
-        username: "",
+        team: "AWAY",
+        username: "AWAY",
         score: 0
     },
 
     stream: {
-        url: ""
+        url: "stream.com"
     },
 
-    sub: ""
+    sub: "ncisfanclub"
 };
 
 ///// Get/Store user data object  
@@ -35,8 +35,10 @@ function cherrypicker(){
 		// 	console.log(response);
 		// } else {
 			console.log("Logged in " + result.name + " with id: " + result.id);
-			getUserInput();
-			stream();	
+			// getUserInput();
+			postPost(makeTitle(),makePost()); ///// MAKE A POST
+			stream();
+			poster();
 		});
 }
 
@@ -68,9 +70,6 @@ function getUserInput(){
 	      matchData.stream.url = result.stream;
 
 	    console.log(matchData);
-	  	
-	  	postPost(makeTitle(),makePost()); ///// MAKE A POST
-
 	  });
 
 	  function onErr(err) {
@@ -87,7 +86,7 @@ function stream(){
 
 		var update = tweet.text;
 
-		if(tweet.user.screen_name.toLowerCase() === matchData.home.username && matchMinutes(update) && tweet.text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === matchData.home.username && matchMinutes(update)
+		if(tweet.user.screen_name.toLowerCase() === matchData.home.username && isMatchUpdate(update) && tweet.text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === matchData.home.username && isMatchUpdate(update)
 			update = update.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
 			// update = update.boldAllCaps();
 		  	matchUpdates.push(update);
@@ -100,7 +99,7 @@ function stream(){
 }
 
 ///// Is that tweet a match update?
-function matchMinutes(string) {
+function isMatchUpdate(string) {
 	if (string.match(/^\d{1,2}’/) || string.match(/^\d{1,2}'/)) {
 		return true;
 	} else {
@@ -142,14 +141,13 @@ function editPost(string){
 	}).then(function(response){
 
 		if (response.json.errors.length > 0){
-			console.log("EDIT ERROR");
-			console.log(response);
+			console.log("EDIT ERROR", response);
 		} else {
-			var responseData = JSON.stringify(response.data.things.permalink, null, 4); //this works
-			// var permalink = response.json.data.things.permalink; // this maybe not
+			var things = response.json.data.things[0]; // things is an array, wtf?
+			var responseData = things.data.title;
 			console.log("EDITED: " + responseData);
-			}	
-		});
+		}	
+	});
 }
 
 // TEMPLATE FUNCTIONS
@@ -224,6 +222,19 @@ var reddit = new Snoocore({
 	userAgent: '/u/cherrypicker_usl cherrypicker',
 	oauth: keys.snoo
 });
+
+////// Test Posts
+var poster = function (){
+	
+setTimeout(function(){
+	var minute =  Math.floor(Math.random() * 90);
+	var date = new Date();
+		minute = minute + "' - " + date.getTime();
+		twitter.post('statuses/update', { status: minute }, function(err, data, response) {
+	  	poster();
+		});
+	}, 60000);
+};
 
 cherrypicker();
 
