@@ -7,6 +7,26 @@ var matchUpdates = ["0': Nothing has happened."];
 var keys = require('./keys');
 
 //////  All the info here, ok?
+// var matchData = {
+//     home: {
+//         team: "",
+//         username: "",
+//         score: 0
+//     },
+    
+//     away: {
+//         team: "",
+//         username: "",
+//         score: 0
+//     },
+
+//     stream: {
+//         url: ""
+//     },
+
+//     sub: ""
+// };
+
 var matchData = {
     home: {
         team: "HOME",
@@ -36,9 +56,9 @@ function cherrypicker(){
 		// } else {
 			console.log("Logged in " + result.name + " with id: " + result.id);
 			// getUserInput();
-			postPost(makeTitle(),makePost()); ///// MAKE A POST
 			stream();
 			poster();
+		    postPost(makeTitle(),makePost()); ///// MAKE A POST	
 		});
 }
 
@@ -70,12 +90,13 @@ function getUserInput(){
 	      matchData.stream.url = result.stream;
 
 	    console.log(matchData);
+	    // postPost(makeTitle(),makePost()); ///// MAKE A POST	
 	  });
 
 	  function onErr(err) {
 	    console.log(err);
 	    return 1;
-	  }
+	  }		
 }
 
 ////// start listening to Twitter
@@ -97,7 +118,6 @@ function stream(){
 
 	});
 }
-
 ///// Is that tweet a match update?
 function isMatchUpdate(string) {
 	if (string.match(/^\d{1,2}’/) || string.match(/^\d{1,2}'/)) {
@@ -226,14 +246,30 @@ var reddit = new Snoocore({
 ////// Test Posts
 var poster = function (){
 	
-setTimeout(function(){
-	var minute =  Math.floor(Math.random() * 90);
-	var date = new Date();
+	var test = function(){
+		checkConnection();
+
+		var minute =  Math.floor(Math.random() * 90);
+		var date = new Date();
+
 		minute = minute + "' - " + date.getTime();
-		twitter.post('statuses/update', { status: minute }, function(err, data, response) {
-	  	poster();
-		});
-	}, 60000);
+		twitter.post('statuses/update', { status: minute }, function(err, data, response){});
+		setTimeout(test, 60000);
+	};
+
+	setTimeout(test, 5000);
+};
+
+var checkConnection = function(){ 
+	twitter.get('search/tweets', {q: 'from:' + matchData.home.username, count: 1}, function(error, data, response){
+		if (error) {
+			console.log("error:", error);
+		} else {
+			data.statuses.forEach(function(tweet){
+				console.log(tweet.text);
+			});
+		}
+	});
 };
 
 cherrypicker();
