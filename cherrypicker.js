@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var Twit = require('twit');
 var Snoocore = require('snoocore');
 var user;
@@ -45,6 +46,10 @@ var matchData = {
     },
 
     sub: "ncisfanclub"
+};
+
+var printUpdates = function(){
+	console.log(updates);
 };
 
 ///// Get/Store user data object  
@@ -260,26 +265,34 @@ var poster = function (){
 	setTimeout(test, 5000);
 };
 
+var tweetsSinceDisconnect = function(statuses){
+	var newUpdates = [];
+
+	statuses.forEach(function(tweet){
+		if(matchUpdates.indexOf(tweet.text) === -1){
+			newUpdates.push(tweet.text);
+		}
+		
+	});
+	return newUpdates;
+};
+
 var checkConnection = function(){ 
-	twitter.get('search/tweets', {q: 'from:' + matchData.home.username, count: 1}, function(error, data, response){
+	twitter.get('search/tweets', {q: 'from:' + matchData.home.username, count: 45}, function(error, data, response){
 		if (error) {
 			console.log("error:", error);
 		} else {
-			data.statuses.forEach(function(tweet){
-				console.log(tweet.text);
-			});
+			var updates = tweetsSinceDisconnect(data.statuses);
+			if (updates){
+				matchUpdates = matchUpdates.concat(updates);
+				console.log(matchUpdates);
+				updates = [];
+			}
 		}
 	});
 };
 
 cherrypicker();
-
-
-  
-
-
-
-
 
 /////// Do this later
 // function findStream(){

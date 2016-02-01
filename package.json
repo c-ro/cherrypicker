@@ -1,0 +1,9 @@
+{
+    "name": "cherrypicker",
+    "version": "0.0.1",
+    "preferGlobal": "true",
+    "bin": { 
+    	"cherrypicker": "cherrypicker.js",
+    	"updates": "updates.js"},
+    "engines": { "node": "*" }
+}
