@@ -6,6 +6,7 @@ var threadData;
 var data;
 var matchUpdates = ["0': Nothing has happened."];
 var keys = require('./keys');
+var lastTweet;
 
 //////  All the info here, ok?
 // var matchData = {
@@ -117,6 +118,7 @@ function stream(){
 			// update = update.boldAllCaps();
 		  	matchUpdates.push(update);
 		  	editPost(makePost());
+		  	lastTweet = tweet.id;
 		} else {
 			// console.log("non-minute tweet");
 		}
@@ -248,17 +250,21 @@ var reddit = new Snoocore({
 	oauth: keys.snoo
 });
 
-////// Test Posts
+////// Test Posts -- REPLACE checkConnection(); in production
 var poster = function (){
 	
+	var minute =  1;
 	var test = function(){
-		checkConnection();
-
-		var minute =  Math.floor(Math.random() * 90);
+		checkConnection(); // REPLACE THIS IN PROD
 		var date = new Date();
 
-		minute = minute + "' - " + date.getTime();
-		twitter.post('statuses/update', { status: minute }, function(err, data, response){});
+		tweet = minute + "' - " + date.getTime();
+		twitter.post('statuses/update', { status: tweet }, function(err, data, response){});
+		if(minute === 90){
+			minute = 1;
+		} else {
+			minute++;
+		}
 		setTimeout(test, 60000);
 	};
 
@@ -267,25 +273,22 @@ var poster = function (){
 
 var tweetsSinceDisconnect = function(statuses){
 	var newUpdates = [];
-
-	statuses.forEach(function(tweet){
-		if(matchUpdates.indexOf(tweet.text) === -1){
-			newUpdates.push(tweet.text);
+	for(var i = 0; i < statuses.length; i++){
+		if(statuses[i].id > lastTweet){
+			newUpdates.push(statuses[i].text);
 		}
-		
-	});
+	}
 	return newUpdates;
 };
 
 var checkConnection = function(){ 
-	twitter.get('search/tweets', {q: 'from:' + matchData.home.username, count: 45}, function(error, data, response){
+	twitter.get('search/tweets', {q: 'from:' + matchData.home.username, count: 5}, function(error, data, response){
 		if (error) {
 			console.log("error:", error);
 		} else {
-			var updates = tweetsSinceDisconnect(data.statuses);
+			var updates = tweetsSinceDisconnect(data.statuses.reverse());
 			if (updates){
 				matchUpdates = matchUpdates.concat(updates);
-				console.log(matchUpdates);
 				updates = [];
 			}
 		}
@@ -298,11 +301,6 @@ cherrypicker();
 // function findStream(){
     
 // }
-
-// var responseData = JSON.stringify(response, null, 4);
-//     console.log('stringify' + stringyThingy);
-
-// 	})
 
 // let's upvote every comment, DELETE THIS ALL CAPS STUFF WHEN YOU'RE DONE
  // function vote(direction, element){
