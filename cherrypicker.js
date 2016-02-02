@@ -46,7 +46,8 @@ var matchData = {
         url: "stream.com"
     },
 
-    sub: "ncisfanclub"
+    sub: "ncisfanclub",
+   	edits: []
 };
 
 var printUpdates = function(){
@@ -152,29 +153,55 @@ function postPost(titleText, textText){
 		threadData = response.json.data;
 
 		console.log("CREATED THREAD: " + threadData.url);
-		console.log("POST ID:" + threadData.name);
-
+		console.log("POST ID:" + threadData.id);
 	});
 }
 
 ///// Edit a post
 function editPost(string){
-
-	console.log("editing. . .");
-	reddit('/api/editusertext').post({
-		api_type: 'json', //the string json
-		text: string,	//raw markdown text
-		thing_id: threadData.name //fullname of a thing created by the user
-	}).then(function(response){
-
-		if (response.json.errors.length > 0){
-			console.log("EDIT ERROR", response);
-		} else {
-			var things = response.json.data.things[0]; // things is an array, wtf?
-			var responseData = things.data.title;
-			console.log("EDITED: " + responseData);
-		}	
+	fetchEdits(function(){
+		reddit('/api/editusertext').post({
+			api_type: 'json', //the string json
+			text: string,	//raw markdown text
+			thing_id: threadData.name //fullname of a thing created by the user
+		}).then(function(response){
+			if (response.json.errors.length > 0){
+				console.log("EDIT ERROR", response);
+			} else {
+				var title = response.json.data.things[0].data.title; // things is an array, wtf?
+				console.log("EDITED: " + title);
+			}	
+		});
 	});
+}
+
+///// Read a post 
+function readPost(id, subreddit, callback){
+	var post;
+		reddit('/r/$subreddit/comments/$article').get({
+			 $subreddit: subreddit,
+			 $article: id
+		}).then(function(result){
+			post = result[0].data.children[0].data.selftext;
+		}).then(function(){
+			callback(post);
+		});
+}	
+
+///// Store Edits 
+function fetchEdits(callback){
+	var post = readPost(threadData.id, matchData.sub, function(post){
+		var edits = post.match(/edit:.*/g);
+		if(edits){
+			edits.forEach(function(edit){
+				if(matchData.edits.indexOf(edit) === -1){
+					matchData.edits = matchData.edits.concat(edits);
+					console.log(matchData.edits);
+				}
+			});
+		}
+	});
+	callback();
 }
 
 // TEMPLATE FUNCTIONS
@@ -203,7 +230,9 @@ function makeHeader(){
 }
 
 function makeFooter(){
-    var string = "^" + matchData.home.team + " vs. " + matchData.away.team + "**";
+    // var string = "^" + matchData.home.team + " vs. " + matchData.away.team + "**"; 
+    var string = '';
+    if(matchData.edits){ string = "\n\n*****\n" + matchData.edits; }
     return string;
 }
 
@@ -228,7 +257,7 @@ function makeUsernameLink(username){
 }
 
 function makePost(){
-	return makeHeader() + makeStream() + makeUpdates(); // score();
+	return makeHeader() + makeStream() + makeUpdates() + makeFooter(); // score();
 }
 
 //START DOING THINGS
@@ -274,7 +303,7 @@ var poster = function (){
 var tweetsSinceDisconnect = function(statuses){
 	var newUpdates = [];
 	for(var i = 0; i < statuses.length; i++){
-		if(statuses[i].id > lastTweet){
+		if(statuses[i].id > lastTweet && isMatchUpdate(statuses[i].text)){
 			newUpdates.push(statuses[i].text);
 		}
 	}
@@ -282,7 +311,11 @@ var tweetsSinceDisconnect = function(statuses){
 };
 
 var checkConnection = function(){ 
-	twitter.get('search/tweets', {q: 'from:' + matchData.home.username, count: 5}, function(error, data, response){
+	///// When not testing with poster() check every 5 mins
+	////
+	///
+	//
+	twitter.get('search/tweets', {q: 'from:' + matchData.home.username, count: 90}, function(error, data, response){
 		if (error) {
 			console.log("error:", error);
 		} else {
@@ -296,7 +329,6 @@ var checkConnection = function(){
 };
 
 cherrypicker();
-
 /////// Do this later
 // function findStream(){
     
