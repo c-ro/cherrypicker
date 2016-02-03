@@ -128,7 +128,7 @@ function stream(){
 }
 ///// Is that tweet a match update?
 function isMatchUpdate(string) {
-	if (string.match(/^\d{1,2}’/) || string.match(/^\d{1,2}'/)) {
+	if (string.match(/(\d{1,2}[’'+:])/) || string.match(/^(FT)/) || string.match(/FULL*.TIME/) || string.match(/(XI)/)) {
 		return true;
 	} else {
 		return false;
@@ -232,7 +232,7 @@ function makeHeader(){
 function makeFooter(){
     // var string = "^" + matchData.home.team + " vs. " + matchData.away.team + "**"; 
     var string = '';
-    if(matchData.edits){ string = "\n\n*****\n" + matchData.edits; }
+    if(matchData.edits){ string = "\n\n*****\n" + matchData.edits.join('\n*  '); }
     return string;
 }
 
