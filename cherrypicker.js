@@ -47,7 +47,7 @@ var matchData = {
     },
 
     sub: "ncisfanclub",
-   	edits: []
+   	edits: ""
 };
 
 var printUpdates = function(){
@@ -160,6 +160,7 @@ function postPost(titleText, textText){
 ///// Edit a post
 function editPost(string){
 	fetchEdits(function(){
+		console.log("fetch in edit", matchData.edits);
 		reddit('/api/editusertext').post({
 			api_type: 'json', //the string json
 			text: string,	//raw markdown text
@@ -189,19 +190,22 @@ function readPost(id, subreddit, callback){
 }	
 
 ///// Store Edits 
+function getFooter(selftext){
+    var index = selftext.lastIndexOf("*****") + 5;
+    var footer = selftext.slice(index, selftext.length);
+    return footer;
+}
+
 function fetchEdits(callback){
-	var post = readPost(threadData.id, matchData.sub, function(post){
-		var edits = post.match(/edit:.*/g);
-		if(edits){
-			edits.forEach(function(edit){
-				if(matchData.edits.indexOf(edit) === -1){
-					matchData.edits = matchData.edits.concat(edits);
-					console.log(matchData.edits);
-				}
-			});
-		}
+	readPost(threadData.id, matchData.sub,
+		function(post){
+			var index = post.lastIndexOf("*****") + 5;
+		    var edits = post.slice(index, post.length);
+			
+			matchData.edits = edits;
+			console.log("fetch", matchData.edits);
+			callback();
 	});
-	callback();
 }
 
 // TEMPLATE FUNCTIONS
@@ -229,10 +233,9 @@ function makeHeader(){
     return string;
 }
 
-function makeFooter(){
-    // var string = "^" + matchData.home.team + " vs. " + matchData.away.team + "**"; 
-    var string = '';
-    if(matchData.edits){ string = "\n\n*****\n" + matchData.edits.join('\n*  '); }
+function makeFooter(){ 
+	console.log("makefooter", matchData.edits);
+	string = "\n\n*****\n" + matchData.edits;
     return string;
 }
 
