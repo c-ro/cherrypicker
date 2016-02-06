@@ -203,6 +203,27 @@ String.prototype.boldAllCaps = function() {
     return output;
 };
 
+
+var avatar = {
+	 "Louisville City FC" : "[](#LOU)",
+	 "Tulsa Roughnecks" : "[](#TUL)",
+	 "Harrisburg City Islanders" : "[](#HAR)",
+	 "FC Montreal" : "[](#FCM)",
+	 "Toronto FC II" : "[](#TFCII)",
+	 "Charleston Battery" : "[](#CHB)",
+	 "Rochester Rhinos" : "[](#ROC)",
+	 "Richmond Kickers" : "[](#RIC)",
+	 "New York Red Bulls II" : "[](#NYRBII)",
+	 "Pittsburgh Riverhounds" : "[](#PIT)",
+	 "Charlotte Independence" : "[](#CLT)",
+	 "Saint Louis FC" : "[](#STL)",
+	 "Wilmington Hammerheads" : "[](#WIL)",
+	 "goal" : "[](#goal)",
+	 "yellow" : "[](#yellow)",
+	 "red" : "[](#red)",
+	 "second yellow" : "[](#second-yellow)"
+};
+
 function makeTitle(){
 	return "[Match Thread] " + matchData.home.team + " vs. " + matchData.away.team; // add match time
 }
