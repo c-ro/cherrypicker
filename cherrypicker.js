@@ -46,8 +46,7 @@ var matchData = {
         url: "stream.com"
     },
 
-    sub: "ncisfanclub",
-   	edits: ""
+    sub: "ncisfanclub"
 };
 
 var printUpdates = function(){
@@ -57,16 +56,16 @@ var printUpdates = function(){
 ///// Get/Store user data object  
 function cherrypicker(){
 	reddit('/api/v1/me').get().then(function(result){
-		// if (result.json.errors.length > 0){
-		// 	console.log("INIT ERROR");
-		// 	console.log(response);
-		// } else {
+		if (!result.id){
+			console.log("INIT ERROR");
+		} else {
 			console.log("Logged in " + result.name + " with id: " + result.id);
 			// getUserInput();
 			stream();
 			poster();
-		    postPost(makeTitle(),makePost()); ///// MAKE A POST	
-		});
+		    postPost(makeTitle(), makePost()); ///// MAKE A POST	
+		}
+	});
 }
 
 ///// Get Input
@@ -121,6 +120,7 @@ function stream(){
 		  	editPost(makePost());
 		  	lastTweet = tweet.id;
 		} else {
+			return;
 			// console.log("non-minute tweet");
 		}
 
@@ -159,8 +159,18 @@ function postPost(titleText, textText){
 
 ///// Edit a post
 function editPost(string){
-	fetchEdits(function(){
-		console.log("fetch in edit", matchData.edits);
+	/// check post for manual edits
+	reddit('/r/$subreddit/comments/$article').get({
+		 $subreddit: matchData.sub,
+		 $article: threadData.id
+	}).then(function(result){
+		//// get edits and add to generated post string
+		var post = result[0].data.children[0].data.selftext;
+		var index = post.lastIndexOf("*****") + 5;
+		var edits = post.slice(index, post.length);
+		string = string + edits;
+	}).then(function(){
+		/// edit the post
 		reddit('/api/editusertext').post({
 			api_type: 'json', //the string json
 			text: string,	//raw markdown text
@@ -173,38 +183,7 @@ function editPost(string){
 				console.log("EDITED: " + title);
 			}	
 		});
-	});
-}
 
-///// Read a post 
-function readPost(id, subreddit, callback){
-	var post;
-		reddit('/r/$subreddit/comments/$article').get({
-			 $subreddit: subreddit,
-			 $article: id
-		}).then(function(result){
-			post = result[0].data.children[0].data.selftext;
-		}).then(function(){
-			callback(post);
-		});
-}	
-
-///// Store Edits 
-function getFooter(selftext){
-    var index = selftext.lastIndexOf("*****") + 5;
-    var footer = selftext.slice(index, selftext.length);
-    return footer;
-}
-
-function fetchEdits(callback){
-	readPost(threadData.id, matchData.sub,
-		function(post){
-			var index = post.lastIndexOf("*****") + 5;
-		    var edits = post.slice(index, post.length);
-			
-			matchData.edits = edits;
-			console.log("fetch", matchData.edits);
-			callback();
 	});
 }
 
@@ -233,19 +212,13 @@ function makeHeader(){
     return string;
 }
 
-function makeFooter(){ 
-	console.log("makefooter", matchData.edits);
-	string = "\n\n*****\n" + matchData.edits;
-    return string;
-}
-
 function makeStream(){
     var string = "\n*****\n**Stream:** " + matchData.stream.url;
     return string;
 }    
 
 function makeUpdates(){
-    var string = "\n*****\n**Match Updates via " + makeUsernameLink(matchData.home.username) + "**\n\n* " + matchUpdates.join('\n*  ');
+    var string = "\n*****\n**Match Updates via " + makeUsernameLink(matchData.home.username) + "**\n\n* " + matchUpdates.join('\n*  ') + "\n\n*****\n";
     return string;
 }
 
@@ -260,7 +233,7 @@ function makeUsernameLink(username){
 }
 
 function makePost(){
-	return makeHeader() + makeStream() + makeUpdates() + makeFooter(); // score();
+	return makeHeader() + makeStream() + makeUpdates();
 }
 
 //START DOING THINGS
