@@ -8,46 +8,46 @@ var matchUpdates = ["0': Nothing has happened."];
 var keys = require('./keys');
 var lastTweet;
 
-//////  All the info here, ok?
-// var matchData = {
-//     home: {
-//         team: "",
-//         username: "",
-//         score: 0
-//     },
-    
-//     away: {
-//         team: "",
-//         username: "",
-//         score: 0
-//     },
-
-//     stream: {
-//         url: ""
-//     },
-
-//     sub: ""
-// };
-
+////  All the info here, ok?
 var matchData = {
     home: {
-        team: "HOME",
-        username: "cherrypickerusl",
+        team: "",
+        username: "",
         score: 0
     },
     
     away: {
-        team: "AWAY",
-        username: "AWAY",
+        team: "",
+        username: "",
         score: 0
     },
 
     stream: {
-        url: "stream.com"
+        url: ""
     },
 
-    sub: "ncisfanclub"
+    sub: ""
 };
+
+// var matchData = {
+//     home: {
+//         team: "HOME",
+//         username: "cherrypickerusl",
+//         score: 0
+//     },
+    
+//     away: {
+//         team: "AWAY",
+//         username: "AWAY",
+//         score: 0
+//     },
+
+//     stream: {
+//         url: "stream.com"
+//     },
+
+//     sub: "ncisfanclub"
+// };
 
 var printUpdates = function(){
 	console.log(updates);
@@ -60,10 +60,10 @@ function cherrypicker(){
 			console.log("INIT ERROR");
 		} else {
 			console.log("Logged in " + result.name + " with id: " + result.id);
-			// getUserInput();
+			getUserInput();
 			stream();
-			poster();
-		    postPost(makeTitle(), makePost()); ///// MAKE A POST	
+			// poster();
+		    // postPost(makeTitle(), makePost()); ///// MAKE A POST	
 		}
 	});
 }
@@ -96,7 +96,7 @@ function getUserInput(){
 	      matchData.stream.url = result.stream;
 
 	    console.log(matchData);
-	    // postPost(makeTitle(),makePost()); ///// MAKE A POST	
+	    postPost(makeTitle(),makePost()); ///// MAKE A POST	
 	  });
 
 	  function onErr(err) {
@@ -114,8 +114,7 @@ function stream(){
 		var update = tweet.text;
 
 		if(tweet.user.screen_name.toLowerCase() === matchData.home.username && isMatchUpdate(update) && tweet.text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === matchData.home.username && isMatchUpdate(update)
-			update = update.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
-			// update = update.boldAllCaps();
+			update = update.replace(/\S*#(?:\[[^\]]+\]|\S+)|\S*@(?:\[[^\]]+\]|\S+)/g, twitterSearchLink);
 		  	matchUpdates.push(update);
 		  	editPost(makePost());
 		  	lastTweet = tweet.id;
@@ -133,6 +132,15 @@ function isMatchUpdate(string) {
 	} else {
 		return false;
 	}
+}
+
+/// turn hashtags to search links
+function twitterSearchLink(string){
+    if(string.indexOf('#') > -1){
+        return "[" + string + "](http://www.twitter.com/search?q=" + string.replace('#','%23') + ")";
+    } else if (string.indexOf('@') > -1){
+        return "[" + string + "](http://www.twitter.com/" + string.replace('@','') + ")";
+    }
 }
 
 ///// Post to Reddit 
@@ -305,6 +313,7 @@ var checkConnection = function(){
 };
 
 cherrypicker();
+setTimeout(checkConnection(), 50000);
 /////// Do this later
 // function findStream(){
     
