@@ -127,7 +127,7 @@ function stream(){
 }
 ///// Is that tweet a match update?
 function isMatchUpdate(string) {
-	if (string.match(/(\d{1,2}[’'+:])/) || string.match(/^(FT)/) || string.match(/FULL*.TIME/) || string.match(/(XI)/)) {
+	if (string.match(/(\d{1,2}[’'+:m])/) || string.match(/^(FT)/) || string.match(/FULL*.TIME/) || string.match(/(XI)/)) {
 		return true;
 	} else {
 		return false;
