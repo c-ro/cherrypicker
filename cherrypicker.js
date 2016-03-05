@@ -113,7 +113,7 @@ function stream(){
 
 		var update = tweet.text;
 
-		if(tweet.user.screen_name.toLowerCase() === matchData.home.username && isMatchUpdate(update) && tweet.text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === matchData.home.username && isMatchUpdate(update)
+		if(tweet.user.screen_name.toLowerCase() === matchData.home.username && isMatchUpdate(update) && tweet.text.indexOf('http:') === -1){
 			update = update.replace(/\S*#(?:\[[^\]]+\]|\S+)|\S*@(?:\[[^\]]+\]|\S+)/g, twitterSearchLink);
 		  	matchUpdates.push(update);
 		  	editPost(makePost());
@@ -126,13 +126,30 @@ function stream(){
 	});
 }
 ///// Is that tweet a match update?
-function isMatchUpdate(string) {
+function isMatchUpdate(string){
+	////// Use Switch?
+	// 	switch (fruit) {
+	//     case 'banana':
+	//     case 'lemon':
+	//     case 'mango':
+	//     case 'pineapple':
+	//         handleYellowFruit();
+	// }
 	if (string.match(/(\d{1,2}[’'+:m])/) || string.match(/^(FT)/) || string.match(/FULL*.TIME/) || string.match(/(XI)/)) {
 		return true;
 	} else {
 		return false;
 	}
 }
+
+///// Does this tweet update the score?
+function isScore(string){
+	var match = string.match(/(?:\s)(\d-\d)/);
+
+	if(match){
+		matchData.score = match[1];
+	}
+} 
 
 /// turn hashtags to search links
 function twitterSearchLink(string){
