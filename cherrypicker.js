@@ -29,26 +29,6 @@ var matchData = {
     sub: ""
 };
 
-// var matchData = {
-//     home: {
-//         team: "HOME",
-//         username: "cherrypickerusl",
-//         score: 0
-//     },
-    
-//     away: {
-//         team: "AWAY",
-//         username: "AWAY",
-//         score: 0
-//     },
-
-//     stream: {
-//         url: "stream.com"
-//     },
-
-//     sub: "ncisfanclub"
-// };
-
 var printUpdates = function(){
 	console.log(updates);
 };
@@ -107,7 +87,7 @@ function getUserInput(){
 
 ////// start listening to Twitter
 function stream(){
-	var stream = twitter.stream('user', {screen_name: 'cherrypickerusl'});
+	var stream = twitter.stream('user', {screen_name: keys.twit.username});
 
 	stream.on('tweet', function (tweet) {
 
@@ -276,7 +256,7 @@ var twitter = new Twit(keys.twit);
 ////// Authenticate Reddit
 
 var reddit = new Snoocore({
-	userAgent: '/u/cherrypicker_usl cherrypicker',
+	userAgent: keys.snoo.useragent,
 	oauth: keys.snoo
 });
 
