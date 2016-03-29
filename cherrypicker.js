@@ -63,6 +63,7 @@ function cherrypicker(){
 			// getUserInput();
 			stream();
 			poster();
+			//postPost(title, body)
 		    postPost(makeTitle(), makePost()); ///// MAKE A POST	
 		}
 	});
