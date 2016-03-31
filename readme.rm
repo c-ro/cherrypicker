@@ -1,10 +1,12 @@
-#CherryPicker is a bot that monitors a soccer match on twitter and maintains a Match Post on reddit.
+# CherryPicker 
+Cherrypicker creates and maintains a match thread for a soccer game on the subreddit of your choice and automatically updates via the home team's twitter stream.
 
 Usage:
 
 1. Clone the repo, and created a file called keys.js in the main directory and insert the following template:  
 
-````module.exports = {
+````javascript
+module.exports = {
 
 	twit: {
 		consumer_key: 'your key',
@@ -23,6 +25,7 @@ Usage:
 		scope: ['identity','read','vote','submit', 'edit']
 	}
 };
+````
 
 2. Then, register an app with both Twitter and Reddit and place them in keys.js.
 3. In a console, in the cherrypicker directory, run `npm install`.
