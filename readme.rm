@@ -29,4 +29,6 @@ module.exports = {
 
 2. Then, register an app with both Twitter and Reddit and place them in keys.js.
 3. In a console, in the cherrypicker directory, run `npm install`.
-4. Run `node cherrypicker.js`
+4. Run `node cherrypicker.js'
+
+That should be it!  If you have trouble just yell at me on Twitter: [@gnirtsmodnar](http://www.twitter.com/gnirtsmodnar)
