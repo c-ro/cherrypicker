@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 var Twit = require('twit');
 var Snoocore = require('snoocore');
+var mrk = require('./markers.js');
 var user;
 var threadData;
 var data;
@@ -181,7 +182,7 @@ function editPost(string){
 				console.log("EDIT ERROR", response);
 			} else {
 				var title = response.json.data.things[0].data.title; // things is an array, wtf?
-				console.log("EDITED: " + title);
+				console.log("EDITED: " + title + "\r");
 			}	
 		});
 
@@ -218,10 +219,10 @@ function makeStream(){
     return string;
 }    
 
-function makeUpdates(){
-    var string = "\n*****\n**Match Updates via " + makeUsernameLink(matchData.home.username) + "**\n\n* " + matchUpdates.join('\n*  ') + "\n\n*****\n";
-    return string;
-}
+// function makeUpdates(){
+//     var string = "\n*****\n**Match Updates via " + makeUsernameLink(matchData.home.username) + "**\n\n* " + matchUpdates.join('\n*  ') + "\n\n*****\n";
+//     return string;
+// }
 
 function makeScore(){
  var string = "\n*****\n\n**CURRENT SCORE:** (" + matchData.home.score + "--" + matchData.away.score +")\n\nLast Updated: " + date;
@@ -234,7 +235,7 @@ function makeUsernameLink(username){
 }
 
 function makePost(){
-	return makeHeader() + makeStream() + makeUpdates();
+	return makeHeader() + makeStream() + mrk.hr() + mrk.list(matchUpdates) + mrk.hr() + mrk.section("Test Section please ignore.");
 }
 
 //START DOING THINGS
