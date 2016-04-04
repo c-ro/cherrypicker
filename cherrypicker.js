@@ -3,34 +3,13 @@
 //local dependencies
 var keys = require('./keys');
 var mrk = require('../markers/markers.js');
+var notify = require('./notify.js');
 
 // other node dependencies
 var Twit = require('twit');
 var Snoocore = require('snoocore');
 var colors = require("colors/safe");
 var prompt = require('prompt');
-var hrt = require('human-readable-time');
-
-// custom logging. bool = true overwrites last line
-var notify = function(string, bool){
-	// for now, use '+ "\n"' to pad lines that shouldn't be overwritten
-	var shouldClear = bool || false;
-
-	var time = function(){
-		return hrt(new Date(), '%hh%:%mm%') + " ";
-	};
-
-	process.stdout.clearLine();   // clear current text
-	process.stdout.cursorTo(0);   // move cursor back to left
-
-	// write
-	if(string.indexOf("error") > -1){
-		process.stdout.write("+ " + colors.red(time() + string)); // write to console
-	} else {
-		process.stdout.write("+ " + time() + string);
-	}
-	
-};
 
 var match = {
     
@@ -219,7 +198,7 @@ function editPost(string){
 				console.log("EDIT ERROR", response);
 			} else {
 				var title = response.json.data.things[0].data.title; // things is an array, wtf?
-				notify("EDITED: " + title + "\r");
+				notify.log("EDITED: " + title + "\r");
 			}	
 		});
 
@@ -320,7 +299,7 @@ var checkConnection = function(){
 	twitter.get('search/tweets', {q: 'from:' + match.data.home.username, count: 90}, function(error, data, response){
 		if (error) {
 			// TODO: better error message
-			notify("error: " + error.errno);
+			notify.log("error: " + error.errno);
 		} else {
 			var updates = tweetsSinceDisconnect(data.statuses.reverse());
 			if (updates){
