@@ -1,57 +1,50 @@
 #!/usr/bin/env node
+
+//local dependencies
+var keys = require('./keys');
+var mrk = require('../markers/markers.js');
+
+// other node dependencies
 var Twit = require('twit');
 var Snoocore = require('snoocore');
-var mrk = require('./markers.js');
-var user;
-var threadData;
-var data;
-var matchUpdates = ["0': Nothing has happened."];
-var keys = require('./keys');
-var lastTweet;
 
 //////  All the info here, ok?
-// var matchData = {
-//     home: {
-//         team: "",
-//         username: "",
-//         score: 0
-//     },
+
+var match = {
     
-//     away: {
-//         team: "",
-//         username: "",
-//         score: 0
-//     },
+    // user input data
+	data: {
+    	home: {
+	        team: "HOME",
+	        username: "cherrypickerusl",
+	        score: 0
+	    },
 
-//     stream: {
-//         url: ""
-//     },
+	    away: {
+	        team: "AWAY",
+	        username: "AWAY",
+	        score: 0
+	    },
 
-//     sub: ""
-// };
+	    stream: {
+	        url: "http://stream.com"
+	    },
 
-var matchData = {
-    home: {
-        team: "HOME",
-        username: "cherrypickerusl",
-        score: 0
-    },
-    
-    away: {
-        team: "AWAY",
-        username: "AWAY",
-        score: 0
+	    sub: "ncisfanclub"	
     },
 
-    stream: {
-        url: "stream.com"
+    // Array and function to catch update tweets.
+    updates: [],
+
+    update: function(string){
+    	this.updates.push(string);
     },
 
-    sub: "ncisfanclub"
-};
+    // script logs the id of the last tweet so it can check for missed updates after a disconnect
+    lastTweet: null,
 
-var printUpdates = function(){
-	console.log(updates);
+    // thread data returned from Reddit.
+    thread: {}
 };
 
 ///// Get/Store user data object  
@@ -64,8 +57,8 @@ function cherrypicker(){
 			// getUserInput();
 			stream();
 			poster();
-			//postPost(title, body)
-		    postPost(makeTitle(), makePost()); ///// MAKE A POST	
+			//postThread(title, body)
+		    postThread(makeTitle(), makePost()); ///// MAKE A POST	
 		}
 	});
 }
@@ -82,23 +75,23 @@ function getUserInput(){
 	    console.log('Enter Match Data:');
 	    
 		console.log('  Target Subreddit:' + result.targetSub);
-			matchData.sub = result.targetSub;
+			match.data.sub = result.targetSub;
 
 	    console.log('  Home Team Name:' + result.homeTeam);
 	    console.log('  Home Team Username:' + result.homeUsername);
-	      matchData.home.team = result.homeTeam;
-	      matchData.home.username = result.homeUsername;
+	      match.data.home.team = result.homeTeam;
+	      match.data.home.username = result.homeUsername;
 	    
 	    console.log('  Away Team Name: ' + result.awayTeam);
 	    console.log('  Away Team Username: ' + result.awayUsername);
-	      matchData.away.team = result.awayTeam;
-	      matchData.away.username = result.awayUsername;
+	      match.data.away.team = result.awayTeam;
+	      match.data.away.username = result.awayUsername;
 
 	    console.log('  Stream URL: ' + result.stream);
-	      matchData.stream.url = result.stream;
+	      match.data.stream.url = result.stream;
 
-	    console.log(matchData);
-	    // postPost(makeTitle(),makePost()); ///// MAKE A POST	
+	    console.log(match.data);
+	    // postThread(makeTitle(),makePost()); ///// MAKE A POST	
 	  });
 
 	  function onErr(err) {
@@ -115,12 +108,12 @@ function stream(){
 
 		var update = tweet.text;
 
-		if(tweet.user.screen_name.toLowerCase() === matchData.home.username && isMatchUpdate(update) && tweet.text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === matchData.home.username && isMatchUpdate(update)
+		if(tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(update) && tweet.text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(update)
 			update = update.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
 			// update = update.boldAllCaps();
-		  	matchUpdates.push(update);
+		  	match.update(update);
 		  	editPost(makePost());
-		  	lastTweet = tweet.id;
+		  	match.lastTweet = tweet.id;
 		} else {
 			return;
 			// console.log("non-minute tweet");
@@ -138,24 +131,24 @@ function isMatchUpdate(string) {
 }
 
 ///// Post to Reddit 
-function postPost(titleText, textText){
+function postThread(title, body){
 
 	reddit('/api/submit').post({
 	  api_type: "json",
 	  kind: "self",
-	  text: textText, //raw markdown
-	  title: titleText,
-	  sr: matchData.sub
+	  text: body, //raw markdown string
+	  title: title, // regular string
+	  sr: match.data.sub
 	}).then(function(response){
 		
 		if(response.errors){
-			console.log("ERROR postPost: " + response.errors);
+			console.log("ERROR postThread: " + response.errors);
 		}
 
-		threadData = response.json.data;
+		match.thread = response.json.data;
 
-		console.log("CREATED THREAD: " + threadData.url);
-		console.log("POST ID:" + threadData.id);
+		console.log("CREATED THREAD: " + match.thread.url);
+		console.log("POST ID:" + match.thread.id);
 	});
 }
 
@@ -163,8 +156,8 @@ function postPost(titleText, textText){
 function editPost(string){
 	/// check post for manual edits
 	reddit('/r/$subreddit/comments/$article').get({
-		 $subreddit: matchData.sub,
-		 $article: threadData.id
+		 $subreddit: match.data.sub,
+		 $article: match.thread.id
 	}).then(function(result){
 		//// get edits and add to generated post string
 		var post = result[0].data.children[0].data.selftext;
@@ -176,13 +169,15 @@ function editPost(string){
 		reddit('/api/editusertext').post({
 			api_type: 'json', //the string json
 			text: string,	//raw markdown text
-			thing_id: threadData.name //fullname of a thing created by the user
+			thing_id: match.thread.name //fullname of a thing created by the user
 		}).then(function(response){
 			if (response.json.errors.length > 0){
 				console.log("EDIT ERROR", response);
 			} else {
 				var title = response.json.data.things[0].data.title; // things is an array, wtf?
-				console.log("EDITED: " + title + "\r");
+					process.stdout.clearLine();  					 // clear current text
+  					process.stdout.cursorTo(0); 					 // move cursor back to left
+  					process.stdout.write("EDITED: " + title + "\r"); // write to console
 			}	
 		});
 
@@ -206,26 +201,19 @@ String.prototype.boldAllCaps = function() {
 };
 
 function makeTitle(){
-	return "[Match Thread] " + matchData.home.team + " vs. " + matchData.away.team; // add match time
+	return "[Match Thread] " + match.data.home.team + " vs. " + match.data.away.team; // add match time
 }
 
 function makeHeader(){
-    var string = "**" + matchData.home.team + " vs. " + matchData.away.team + "**";
-    return string;
+	return mrk.bold(match.data.home.team + " vs. " + match.data.away.team);
 }
 
 function makeStream(){
-    var string = "\n*****\n**Stream:** " + matchData.stream.url;
-    return string;
+    return mrk.bold("Stream: " + mrk.link("youtube", match.data.stream.url));
 }    
 
-// function makeUpdates(){
-//     var string = "\n*****\n**Match Updates via " + makeUsernameLink(matchData.home.username) + "**\n\n* " + matchUpdates.join('\n*  ') + "\n\n*****\n";
-//     return string;
-// }
-
 function makeScore(){
- var string = "\n*****\n\n**CURRENT SCORE:** (" + matchData.home.score + "--" + matchData.away.score +")\n\nLast Updated: " + date;
+ var string = "\n*****\n\n**CURRENT SCORE:** (" + match.data.home.score + "--" + match.data.away.score +")\n\nLast Updated: " + date;
  return string;
 }
 
@@ -235,7 +223,7 @@ function makeUsernameLink(username){
 }
 
 function makePost(){
-	return makeHeader() + makeStream() + mrk.hr() + mrk.list(matchUpdates) + mrk.hr() + mrk.section("Test Section please ignore.");
+	return mrk.section(makeHeader()) + mrk.section(makeStream()) + mrk.section(mrk.list(match.updates));
 }
 
 //START DOING THINGS
@@ -281,7 +269,7 @@ var poster = function (){
 var tweetsSinceDisconnect = function(statuses){
 	var newUpdates = [];
 	for(var i = 0; i < statuses.length; i++){
-		if(statuses[i].id > lastTweet && isMatchUpdate(statuses[i].text)){
+		if(statuses[i].id > match.lastTweet && isMatchUpdate(statuses[i].text)){
 			newUpdates.push(statuses[i].text);
 		}
 	}
@@ -293,13 +281,13 @@ var checkConnection = function(){
 	////
 	///
 	//
-	twitter.get('search/tweets', {q: 'from:' + matchData.home.username, count: 90}, function(error, data, response){
+	twitter.get('search/tweets', {q: 'from:' + match.data.home.username, count: 90}, function(error, data, response){
 		if (error) {
 			console.log("error:", error);
 		} else {
 			var updates = tweetsSinceDisconnect(data.statuses.reverse());
 			if (updates){
-				matchUpdates = matchUpdates.concat(updates);
+				match.updates = match.updates.concat(updates);
 				updates = [];
 			}
 		}
@@ -307,6 +295,7 @@ var checkConnection = function(){
 };
 
 cherrypicker();
+
 /////// Do this later
 // function findStream(){
     

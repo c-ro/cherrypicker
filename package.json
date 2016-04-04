@@ -5,5 +5,11 @@
     "bin": { 
     	"cherrypicker": "cherrypicker.js",
     	"updates": "updates.js"},
-    "engines": { "node": "*" }
+    "engines": { "node": "*" },
+    "scripts": {
+    	"start": "node cherrypicker.js"
+    	},
+    "dependencies": {
+  	"markers.js": "file:../markers"
+	}
 }

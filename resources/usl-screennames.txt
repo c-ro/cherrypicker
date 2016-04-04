@@ -34,11 +34,11 @@ Austin Aztex
 Sacremento Republic FC
 @SacRepublicFC
 
-	OKC Energy FC
-	@EnergyFC
+OKC Energy FC
+@EnergyFC
 
-	OKC Energy FC Gameday
-	@EnergyGameday
+OKC Energy FC Gameday
+@EnergyGameday
 
 Tulsa Roughnecks FC
 @RoughnecksFC
@@ -52,11 +52,11 @@ Switchbacks FC
 Arizona United Soccer
 @AZUnitedSC
 
-	Louisville City FC
-	@loucityfc
+Louisville City FC
+@loucityfc
 
-	LouCityMatchDay
-	@LouCityMatchDay
+LouCityMatchDay
+@LouCityMatchDay
 
 Charlotte Independence
 @CLTIndependence
@@ -64,11 +64,11 @@ Charlotte Independence
 Real Monarchs
 @RealMonarchs
 
-	Saint Louis FC
-	@SaintLouisFC
+Saint Louis FC
+@SaintLouisFC
 
-	Saint Louis FC Gameday
-	@STLFCGameday
+Saint Louis FC Gameday
+@STLFCGameday
 
 
 Portland Timbers 2
@@ -88,3 +88,15 @@ Rio Grande Valley FC
 
 FC Montréal
 @fcmontrealusl
+
+FC Cincinnati
+@fccincinnati
+
+Bethlehem Steel FC
+@bsteelfc
+
+Orlando City B
+@orlandocityb
+
+Swope Park Rangers KC
+@swoperangers
