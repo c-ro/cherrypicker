@@ -7,34 +7,69 @@ var mrk = require('../markers/markers.js');
 // other node dependencies
 var Twit = require('twit');
 var Snoocore = require('snoocore');
+var colors = require("colors/safe");
+var prompt = require('prompt');
 
 //////  All the info here, ok?
+
+	// data: {
+
+ //    	home: {
+	//         team: "HOME",
+	//         username: "cherrypickerusl",
+	//         score: 0
+	//     },
+
+	//     away: {
+	//         team: "AWAY",
+	//         username: "AWAY",
+	//         score: 0
+	//     },
+
+	//     stream: {
+	//         url: "http://stream.com"
+	//     },
+
+	//     sub: "ncisfanclub",
+
+ //   	 	updates: []
+ //    },
 
 var match = {
     
     // user input data
 	data: {
+
     	home: {
-	        team: "HOME",
-	        username: "cherrypickerusl",
+	        team: "",
+	        username: "",
 	        score: 0
 	    },
 
 	    away: {
-	        team: "AWAY",
-	        username: "AWAY",
+	        team: "",
+	        username: "",
 	        score: 0
 	    },
 
 	    stream: {
-	        url: "http://stream.com"
+	        url: ""
 	    },
 
-	    sub: "ncisfanclub"	
+	    sub: "",
+
+   	 	updates: []
     },
 
-    // Array and function to catch update tweets.
-    updates: [],
+    input: function(result){
+    	this.data.home.team = result.homeTeam;
+    	this.data.home.username = result.homeUsername;
+    	this.data.away.team = result.awayTeam;
+    	this.data.away.username = result.awayUsername;
+    	this.data.stream.url = result.stream;
+    	this.data.sub = result.targetSub;
+    	console.log("Match Thread starting with this data: \n", this.data);
+    },
 
     update: function(string){
     	this.updates.push(string);
@@ -51,53 +86,65 @@ var match = {
 function cherrypicker(){
 	reddit('/api/v1/me').get().then(function(result){
 		if (!result.id){
-			console.log("INIT ERROR");
+			console.log("Reddit Connection Error");
 		} else {
-			console.log("Logged in " + result.name + " with id: " + result.id);
-			// getUserInput();
-			stream();
-			poster();
+			console.log("Logged into reddit as " + result.name + " with id: " + result.id);
+			getUserInput();
+			// stream();
+			// poster();
 			//postThread(title, body)
-		    postThread(makeTitle(), makePost()); ///// MAKE A POST	
+		    //postThread(makeTitle(), makePost()); ///// MAKE A POST	
 		}
 	});
 }
 
 ///// Get Input
 function getUserInput(){
-	var prompt = require('prompt');
+	prompt.message = colors.green(">");
+	prompt.delimiter = colors.green("");
 
-	  prompt.start();
+	prompt.start();
 
-	  prompt.get(['targetSub', 'homeTeam', 'homeUsername', 'awayTeam', 'awayUsername', 'stream'], function (err, result) {
-	    if (err) { return onErr(err); }
-	    
-	    console.log('Enter Match Data:');
-	    
-		console.log('  Target Subreddit:' + result.targetSub);
-			match.data.sub = result.targetSub;
+	prompt.get({
 
-	    console.log('  Home Team Name:' + result.homeTeam);
-	    console.log('  Home Team Username:' + result.homeUsername);
-	      match.data.home.team = result.homeTeam;
-	      match.data.home.username = result.homeUsername;
-	    
-	    console.log('  Away Team Name: ' + result.awayTeam);
-	    console.log('  Away Team Username: ' + result.awayUsername);
-	      match.data.away.team = result.awayTeam;
-	      match.data.away.username = result.awayUsername;
+		properties: {
+			targetSub: {
+				description: colors.green("Target Sub:")
+			},
+			homeTeam: {
+				description: colors.green("Home Team Name:")
+			},
+			awayTeam: {
+				description: colors.green("Away Team Name:")
+			},
+			homeUsername: {
+				description: colors.green("Home Team Username: @")
+			},
+			awayUsername: {
+				description: colors.green("Away Team Username: @")
+			},
+			stream: {
+				description: colors.green("Stream URL:")
+			},
+		}
 
-	    console.log('  Stream URL: ' + result.stream);
-	      match.data.stream.url = result.stream;
+		}, function (err, result) { 
+		// 'targetSub', 'homeTeam', 'homeUsername', 'awayTeam', 'awayUsername', 'stream']
+		if (err) { return onErr(err); }
 
-	    console.log(match.data);
-	    // postThread(makeTitle(),makePost()); ///// MAKE A POST	
-	  });
+	/// This should be a single function call to the match object
+		match.input(result);
+		// match.data.sub = result.targetSub;
+		// match.add("home", result.homeTeam, result.homeUsername);
+		// match.add("away", result.awayTeam, result.awayUsername);
+		// match.data.stream.url = result.stream;
 
-	  function onErr(err) {
-	    console.log(err);
-	    return 1;
-	  }		
+	});
+
+	function onErr(err) {
+	console.log(err);
+	return 1;
+	}		
 }
 
 ////// start listening to Twitter
@@ -106,13 +153,15 @@ function stream(){
 
 	stream.on('tweet', function (tweet) {
 
-		var update = tweet.text;
+		var text = tweet.text;
 
-		if(tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(update) && tweet.text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(update)
-			update = update.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
-			// update = update.boldAllCaps();
-		  	match.update(update);
+		if(tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(text) && text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(update)
+			text = text.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
+		  	
+		  	match.update(text);
+		  	
 		  	editPost(makePost());
+
 		  	match.lastTweet = tweet.id;
 		} else {
 			return;
@@ -192,14 +241,6 @@ function editPost(string){
 ////
 //
 
-String.prototype.boldAllCaps = function() {
-    var update = this;
-    var caps = update.match(/[A-Z]+/);
-    var bold = "**" + caps[0] + "**";
-    var output = update.replace(/[A-Z]+/, bold);
-    return output;
-};
-
 function makeTitle(){
 	return "[Match Thread] " + match.data.home.team + " vs. " + match.data.away.team; // add match time
 }
@@ -223,7 +264,7 @@ function makeUsernameLink(username){
 }
 
 function makePost(){
-	return mrk.section(makeHeader()) + mrk.section(makeStream()) + mrk.section(mrk.list(match.updates));
+	return mrk.section(makeHeader()) + mrk.section(makeStream()) + mrk.section(mrk.list(match.data.updates));
 }
 
 //START DOING THINGS
@@ -287,7 +328,7 @@ var checkConnection = function(){
 		} else {
 			var updates = tweetsSinceDisconnect(data.statuses.reverse());
 			if (updates){
-				match.updates = match.updates.concat(updates);
+				match.data.updates = match.data.updates.concat(updates);
 				updates = [];
 			}
 		}
