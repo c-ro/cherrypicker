@@ -11,30 +11,26 @@ var colors = require("colors/safe");
 var prompt = require('prompt');
 var hrt = require('human-readable-time');
 
-//////  All the info here, ok?
+// custom logging. bool = true overwrites last line
+var notify = function(string, bool){
+	// for now, use '+ "\n"' to pad lines that shouldn't be overwritten
+	var shouldClear = bool || false;
 
-	// data: {
+	var time = function(){
+		return hrt(new Date(), '%hh%:%mm%') + " ";
+	};
 
- //    	home: {
-	//         team: "HOME",
-	//         username: "cherrypickerusl",
-	//         score: 0
-	//     },
+	process.stdout.clearLine();   // clear current text
+	process.stdout.cursorTo(0);   // move cursor back to left
 
-	//     away: {
-	//         team: "AWAY",
-	//         username: "AWAY",
-	//         score: 0
-	//     },
-
-	//     stream: {
-	//         url: "http://stream.com"
-	//     },
-
-	//     sub: "ncisfanclub",
-
- //   	 	updates: []
- //    },
+	// write
+	if(string.indexOf("error") > -1){
+		process.stdout.write("+ " + colors.red(time() + string)); // write to console
+	} else {
+		process.stdout.write("+ " + time() + string);
+	}
+	
+};
 
 var match = {
     
@@ -62,7 +58,6 @@ var match = {
    	 	updates: ["0' - Get hyped."]
     },
 
-    /// TODO: This should be calling getUserInput() and constructing after it returns
     input: function(input){
     	this.data.home.team = input.homeTeam;
     	this.data.home.username =  input.homeUsername;
@@ -70,7 +65,7 @@ var match = {
     	this.data.away.username =  input.awayUsername;
     	this.data.stream.url =  input.stream;
     	this.data.sub =  input.targetSub;
-    	console.log("Match Thread starting with this data: \n", this.data);
+    	console.log(colors.cyan("Match Thread starting with this data: \n"), this.data);
     },
 
     update: function(string){
@@ -196,8 +191,8 @@ function postThread(title, body){
 
 		match.thread = response.json.data;
 
-		console.log("CREATED THREAD: " + match.thread.url);
-		console.log("POST ID:" + match.thread.id);
+		process.stdout.write(colors.cyan("THREAD ID/URL: " + " [" + match.thread.id + "] " + match.thread.url) + "\n");
+
 	});
 }
 
@@ -224,9 +219,7 @@ function editPost(string){
 				console.log("EDIT ERROR", response);
 			} else {
 				var title = response.json.data.things[0].data.title; // things is an array, wtf?
-					process.stdout.clearLine();  					 // clear current text
-  					process.stdout.cursorTo(0); 					 // move cursor back to left
-  					process.stdout.write(hrt(new Date(0), '%hh%:%mm%') + "EDITED: " + title + "\r"); // write to console
+				notify("EDITED: " + title + "\r");
 			}	
 		});
 
@@ -326,8 +319,8 @@ var checkConnection = function(){
 
 	twitter.get('search/tweets', {q: 'from:' + match.data.home.username, count: 90}, function(error, data, response){
 		if (error) {
-			// TODO, better error message
-			console.log("error:", error);
+			// TODO: better error message
+			notify("error: " + error.errno);
 		} else {
 			var updates = tweetsSinceDisconnect(data.statuses.reverse());
 			if (updates){

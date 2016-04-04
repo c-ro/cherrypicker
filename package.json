@@ -1,15 +1,19 @@
 {
-    "name": "cherrypicker",
-    "version": "0.0.1",
-    "preferGlobal": "true",
-    "bin": { 
-    	"cherrypicker": "cherrypicker.js",
-    	"updates": "updates.js"},
-    "engines": { "node": "*" },
-    "scripts": {
-    	"start": "node cherrypicker.js"
-    	},
-    "dependencies": {
-  	"markers.js": "file:../markers"
-	}
+  "name": "cherrypicker",
+  "version": "0.0.1",
+  "preferGlobal": "true",
+  "bin": {
+    "cherrypicker": "cherrypicker.js",
+    "updates": "updates.js"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "scripts": {
+    "start": "node cherrypicker.js"
+  },
+  "dependencies": {
+    "human-readable-time": "^0.2.3",
+    "markers.js": "file:../markers"
+  }
 }
