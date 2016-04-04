@@ -9,6 +9,7 @@ var Twit = require('twit');
 var Snoocore = require('snoocore');
 var colors = require("colors/safe");
 var prompt = require('prompt');
+var hrt = require('human-readable-time');
 
 //////  All the info here, ok?
 
@@ -58,21 +59,22 @@ var match = {
 
 	    sub: "",
 
-   	 	updates: []
+   	 	updates: ["0' - Get hyped."]
     },
 
-    input: function(result){
-    	this.data.home.team = result.homeTeam;
-    	this.data.home.username = result.homeUsername;
-    	this.data.away.team = result.awayTeam;
-    	this.data.away.username = result.awayUsername;
-    	this.data.stream.url = result.stream;
-    	this.data.sub = result.targetSub;
+    /// TODO: This should be calling getUserInput() and constructing after it returns
+    input: function(input){
+    	this.data.home.team = input.homeTeam;
+    	this.data.home.username =  input.homeUsername;
+    	this.data.away.team =  input.awayTeam;
+    	this.data.away.username =  input.awayUsername;
+    	this.data.stream.url =  input.stream;
+    	this.data.sub =  input.targetSub;
     	console.log("Match Thread starting with this data: \n", this.data);
     },
 
     update: function(string){
-    	this.updates.push(string);
+    	this.data.updates.push(string);
     },
 
     // script logs the id of the last tweet so it can check for missed updates after a disconnect
@@ -88,18 +90,20 @@ function cherrypicker(){
 		if (!result.id){
 			console.log("Reddit Connection Error");
 		} else {
-			console.log("Logged into reddit as " + result.name + " with id: " + result.id);
-			getUserInput();
-			// stream();
-			// poster();
-			//postThread(title, body)
-		    //postThread(makeTitle(), makePost()); ///// MAKE A POST	
+			console.log(colors.magenta("Logged into reddit as " + result.name + " with id: " + result.id));
+			getUserInput(function(userInput){
+				match.input(userInput);
+				stream();
+				poster();
+			    postThread(makeTitle(), makePost()); ///// MAKE A POST	
+			});
+
 		}
 	});
 }
 
 ///// Get Input
-function getUserInput(){
+function getUserInput(callback){
 	prompt.message = colors.green(">");
 	prompt.delimiter = colors.green("");
 
@@ -114,31 +118,27 @@ function getUserInput(){
 			homeTeam: {
 				description: colors.green("Home Team Name:")
 			},
-			awayTeam: {
-				description: colors.green("Away Team Name:")
-			},
 			homeUsername: {
 				description: colors.green("Home Team Username: @")
+			},
+			awayTeam: {
+				description: colors.green("Away Team Name:")
 			},
 			awayUsername: {
 				description: colors.green("Away Team Username: @")
 			},
+
 			stream: {
 				description: colors.green("Stream URL:")
 			},
 		}
 
 		}, function (err, result) { 
-		// 'targetSub', 'homeTeam', 'homeUsername', 'awayTeam', 'awayUsername', 'stream']
+		
 		if (err) { return onErr(err); }
-
-	/// This should be a single function call to the match object
-		match.input(result);
-		// match.data.sub = result.targetSub;
-		// match.add("home", result.homeTeam, result.homeUsername);
-		// match.add("away", result.awayTeam, result.awayUsername);
-		// match.data.stream.url = result.stream;
-
+		
+		// Send the result object back and process elsewhere
+		callback(result);
 	});
 
 	function onErr(err) {
@@ -226,7 +226,7 @@ function editPost(string){
 				var title = response.json.data.things[0].data.title; // things is an array, wtf?
 					process.stdout.clearLine();  					 // clear current text
   					process.stdout.cursorTo(0); 					 // move cursor back to left
-  					process.stdout.write("EDITED: " + title + "\r"); // write to console
+  					process.stdout.write(hrt(new Date(0), '%hh%:%mm%') + "EDITED: " + title + "\r"); // write to console
 			}	
 		});
 
@@ -322,8 +322,11 @@ var checkConnection = function(){
 	////
 	///
 	//
+
+
 	twitter.get('search/tweets', {q: 'from:' + match.data.home.username, count: 90}, function(error, data, response){
 		if (error) {
+			// TODO, better error message
 			console.log("error:", error);
 		} else {
 			var updates = tweetsSinceDisconnect(data.statuses.reverse());
@@ -336,6 +339,7 @@ var checkConnection = function(){
 };
 
 cherrypicker();
+// setTimeout(checkConnection, 5000);
 
 /////// Do this later
 // function findStream(){
