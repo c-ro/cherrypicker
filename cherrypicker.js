@@ -3,7 +3,7 @@
 //local dependencies
 var keys = require('./keys');
 var mrk = require('../markers/markers.js');
-var notify = require('./notify.js');
+var notify = require('./notify.js'); 
 
 // other node dependencies
 var Twit = require('twit');
@@ -11,7 +11,7 @@ var Snoocore = require('snoocore');
 var colors = require("colors/safe");
 var prompt = require('prompt');
 
-var match = {
+var match = { //TODO: Should this be an immediately invoked module?
     
     // user input data
 	data: {
@@ -58,24 +58,6 @@ var match = {
     thread: {}
 };
 
-///// Get/Store user data object  
-function cherrypicker(){
-	reddit('/api/v1/me').get().then(function(result){
-		if (!result.id){
-			console.log("Reddit Connection Error");
-		} else {
-			console.log(colors.magenta("Logged into reddit as " + result.name + " with id: " + result.id));
-			getUserInput(function(userInput){
-				match.input(userInput);
-				stream();
-				poster();
-			    postThread(makeTitle(), makePost()); ///// MAKE A POST	
-			});
-
-		}
-	});
-}
-
 ///// Get Input
 function getUserInput(callback){
 	prompt.message = colors.green(">");
@@ -116,36 +98,13 @@ function getUserInput(callback){
 	});
 
 	function onErr(err) {
-	console.log(err);
-	return 1;
-	}		
+		console.log(err);
+		return 1;
+	}	
 }
 
-////// start listening to Twitter
-function stream(){
-	var stream = twitter.stream('user', {screen_name: 'cherrypickerusl'});
-
-	stream.on('tweet', function (tweet) {
-
-		var text = tweet.text;
-
-		if(tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(text) && text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(update)
-			text = text.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
-		  	
-		  	match.update(text);
-		  	
-		  	editPost(makePost());
-
-		  	match.lastTweet = tweet.id;
-		} else {
-			return;
-			// console.log("non-minute tweet");
-		}
-
-	});
-}
 ///// Is that tweet a match update?
-function isMatchUpdate(string) {
+function isMatchUpdate(string) { //TODOL this should definitely be a validation for update within the match object
 	if (string.match(/(\d{1,2}[’'+:])/) || string.match(/^(FT)/) || string.match(/FULL*.TIME/) || string.match(/(XI)/)) {
 		return true;
 	} else {
@@ -154,8 +113,7 @@ function isMatchUpdate(string) {
 }
 
 ///// Post to Reddit 
-function postThread(title, body){
-
+function postThread(title, body){ // TODO: Should this be a method on the match object?
 	reddit('/api/submit').post({
 	  api_type: "json",
 	  kind: "self",
@@ -176,7 +134,7 @@ function postThread(title, body){
 }
 
 ///// Edit a post
-function editPost(string){
+function editPost(string){// TODO: Should this be a method on the match object?
 	/// check post for manual edits
 	reddit('/r/$subreddit/comments/$article').get({
 		 $subreddit: match.data.sub,
@@ -212,54 +170,63 @@ function editPost(string){
 ////////
 ////
 //
+var make = function(){
+	/// TODO: Are these functions too dependant on the match object?
+	//  Leaving this in cherrypicker.js for the time being due to dependency.
+	var make = {};
 
-function makeTitle(){
-	return "[Match Thread] " + match.data.home.team + " vs. " + match.data.away.team; // add match time
+	make.title = function(){
+		return "[Match Thread] " + match.data.home.team + " vs. " + match.data.away.team; // add match time
+	};
+
+	make.header = function(){
+		return mrk.bold(match.data.home.team + " vs. " + match.data.away.team);
+	};
+
+	make.stream = function(){
+	    return mrk.bold("Stream: " + mrk.link("youtube", match.data.stream.url));
+	};
+
+	make.score = function(){
+		 var string = "\n*****\n\n**CURRENT SCORE:** (" + match.data.home.score + "--" + match.data.away.score +")\n\nLast Updated: " + date;
+		 return string;
+	};
+
+	make.post = function(){
+		return mrk.section(make.header()) + mrk.section(make.stream()) + mrk.section(mrk.list(match.data.updates));
+	};
+
+	return make;
+
+}();
+
+////// start listening to Twitter
+function stream(){
+	var stream = twitter.stream('user', {screen_name: 'cherrypickerusl'});
+
+	stream.on('tweet', function (tweet) {
+
+		var text = tweet.text;
+
+		if(tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(text) && text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(update)
+			text = text.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
+		  	
+		  	match.update(text);
+		  	
+		  	editPost(make.post());
+
+		  	match.lastTweet = tweet.id;
+
+		} else {
+			return;
+			// console.log("non-minute tweet");
+		}
+
+	});
 }
-
-function makeHeader(){
-	return mrk.bold(match.data.home.team + " vs. " + match.data.away.team);
-}
-
-function makeStream(){
-    return mrk.bold("Stream: " + mrk.link("youtube", match.data.stream.url));
-}    
-
-function makeScore(){
- var string = "\n*****\n\n**CURRENT SCORE:** (" + match.data.home.score + "--" + match.data.away.score +")\n\nLast Updated: " + date;
- return string;
-}
-
-function makeUsernameLink(username){
-    var link = "[" + username + "]" + "(http://www.twitter.com/" + username.slice(0) + ")";
-    return link;
-}
-
-function makePost(){
-	return mrk.section(makeHeader()) + mrk.section(makeStream()) + mrk.section(mrk.list(match.data.updates));
-}
-
-//START DOING THINGS
-////////////////////
-////////////////
-////////////
-////////
-////
-//
-
-///// Authenticate Twitter
-
-var twitter = new Twit(keys.twit);
-
-////// Authenticate Reddit
-
-var reddit = new Snoocore({
-	userAgent: '/u/cherrypicker_usl cherrypicker',
-	oauth: keys.snoo
-});
 
 ////// Test Posts -- REPLACE checkConnection(); in production
-var poster = function (){
+var poster = function (){ //TODO: Should poster(), tweetsSinceDisconnect(), and checkConnection() be separated/modulized??
 	
 	var minute =  1;
 	var test = function(){
@@ -294,8 +261,6 @@ var checkConnection = function(){
 	////
 	///
 	//
-
-
 	twitter.get('search/tweets', {q: 'from:' + match.data.home.username, count: 90}, function(error, data, response){
 		if (error) {
 			// TODO: better error message
@@ -309,6 +274,43 @@ var checkConnection = function(){
 		}
 	});
 };
+
+//START DOING THINGS
+////////////////////
+////////////////
+////////////
+////////
+////
+//
+
+///// Authenticate Twitter
+
+var twitter = new Twit(keys.twit);
+
+////// Authenticate Reddit
+
+var reddit = new Snoocore({
+	userAgent: '/u/cherrypicker_usl cherrypicker',
+	oauth: keys.snoo
+});
+
+///// Get/Store user data object and initiate process
+function cherrypicker(){
+	reddit('/api/v1/me').get().then(function(result){
+		if (!result.id){
+			console.log("Reddit Connection Error");
+		} else {
+			console.log(colors.magenta("Logged into reddit as " + result.name + " with id: " + result.id));
+			getUserInput(function(userInput){
+				match.input(userInput);
+				stream();
+				poster();
+			    postThread(make.title(), make.post()); ///// MAKE A POST	
+			});
+
+		}
+	});
+}
 
 cherrypicker();
 // setTimeout(checkConnection, 5000);

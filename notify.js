@@ -2,6 +2,7 @@
 // npm human-readable-time is a dependency
 // for now, use '+ "\n"' to pad lines that shouldn't be overwritten
 var hrt = require('human-readable-time');
+var colors = require("colors/safe");
 
 var notify = function(){
 	"use strict";
