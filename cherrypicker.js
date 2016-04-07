@@ -28,9 +28,7 @@ var match = { //TODO: Should this be an immediately invoked module?
 	        score: 0
 	    },
 
-	    stream: {
-	        url: ""
-	    },
+	    stream: "",
 
 	    sub: "",
 
@@ -39,11 +37,11 @@ var match = { //TODO: Should this be an immediately invoked module?
 
     input: function(input){
     	this.data.home.team = input.homeTeam;
-    	this.data.home.username =  input.homeUsername;
+    	this.data.home.username =  input.homeUsername.toLowerCase();
     	this.data.away.team =  input.awayTeam;
-    	this.data.away.username =  input.awayUsername;
-    	this.data.stream.url =  input.stream;
-    	this.data.sub =  input.targetSub;
+    	this.data.away.username =  input.awayUsername.toLowerCase();
+    	this.data.stream = input.stream;
+    	this.data.sub = input.targetSub.toLowerCase();
     	console.log(colors.cyan("Match Thread starting with this data: \n"), this.data);
     },
 
@@ -51,8 +49,29 @@ var match = { //TODO: Should this be an immediately invoked module?
     	this.data.updates.push(string);
     },
 
+    isUpdate: function(string) {
+    	// TODO: make these cases more clear, store in array?
+		if (string.match(/(\d{1,2}[’'+:])/) || string.match(/^(FT)/) || string.match(/FULL*.TIME/) || string.match(/(XI)/)) {
+			return true;
+		} else {
+			return false;
+		}
+	},
+
+	missedUpdates: function(statuses){
+		var newUpdates = [];
+
+		for(var i = 0; i < statuses.length; i++){
+			if(statuses[i].id > match.lastTweet && match.isUpdate(statuses[i].text)){
+				newUpdates.push(statuses[i].text);
+			}
+		}
+		
+		return newUpdates;
+	},
+
     // script logs the id of the last tweet so it can check for missed updates after a disconnect
-    lastTweet: null,
+    lastTweet: "",
 
     // thread data returned from Reddit.
     thread: {}
@@ -83,7 +102,6 @@ function getUserInput(callback){
 			awayUsername: {
 				description: colors.green("Away Team Username: @")
 			},
-
 			stream: {
 				description: colors.green("Stream URL:")
 			},
@@ -101,15 +119,6 @@ function getUserInput(callback){
 		console.log(err);
 		return 1;
 	}	
-}
-
-///// Is that tweet a match update?
-function isMatchUpdate(string) { //TODOL this should definitely be a validation for update within the match object
-	if (string.match(/(\d{1,2}[’'+:])/) || string.match(/^(FT)/) || string.match(/FULL*.TIME/) || string.match(/(XI)/)) {
-		return true;
-	} else {
-		return false;
-	}
 }
 
 ///// Post to Reddit 
@@ -134,23 +143,23 @@ function postThread(title, body){ // TODO: Should this be a method on the match 
 }
 
 ///// Edit a post
-function editPost(string){// TODO: Should this be a method on the match object?
+function editPost(string){ // TODO: Should this be a method on the match object?
 	/// check post for manual edits
 	reddit('/r/$subreddit/comments/$article').get({
 		 $subreddit: match.data.sub,
 		 $article: match.thread.id
 	}).then(function(result){
 		//// get edits and add to generated post string
-		var post = result[0].data.children[0].data.selftext;
-		var index = post.lastIndexOf("*****") + 5;
-		var edits = post.slice(index, post.length);
-		string = string + edits;
+		var post = result[0].data.children[0].data.selftext; // Get whole selftext
+		var index = post.lastIndexOf("*****") + 5;  // Generated post must end with horizontal rule, cherrypicker uses this to find manual edits.
+		var edits = post.slice(index, post.length); // Get the manually added edits
+		string = string + edits; // add the edits to the incoming generated markdown string
 	}).then(function(){
-		/// edit the post
+		/// send the edit request to reddit
 		reddit('/api/editusertext').post({
-			api_type: 'json', //the string json
-			text: string,	//raw markdown text
-			thing_id: match.thread.name //fullname of a thing created by the user
+			api_type: 'json', //the string 'json'
+			text: string, // incoming markdown string
+			thing_id: match.thread.name // fullname of a thing created when the reddit post was made
 		}).then(function(response){
 			if (response.json.errors.length > 0){
 				console.log("EDIT ERROR", response);
@@ -171,7 +180,7 @@ function editPost(string){// TODO: Should this be a method on the match object?
 ////
 //
 var make = function(){
-	/// TODO: Are these functions too dependant on the match object?
+	/// TODO: Are these functions too dependent on the match object?
 	//  Leaving this in cherrypicker.js for the time being due to dependency.
 	var make = {};
 
@@ -184,7 +193,7 @@ var make = function(){
 	};
 
 	make.stream = function(){
-	    return mrk.bold("Stream: " + mrk.link("youtube", match.data.stream.url));
+	    return mrk.link("View Stream", match.data.stream);
 	};
 
 	make.score = function(){
@@ -204,11 +213,20 @@ var make = function(){
 function stream(){
 	var stream = twitter.stream('user', {screen_name: 'cherrypickerusl'});
 
+	stream.on('error', function (error) {
+	  console.log(error.message);
+	});
+
+	stream.on('connected', function (response) {
+		notify.log(colors.green("twitter stream connection. . ." + response.statusMessage));
+	});
+
 	stream.on('tweet', function (tweet) {
 
 		var text = tweet.text;
 
-		if(tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(text) && text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === match.data.home.username && isMatchUpdate(update)
+		if(tweet.user.screen_name.toLowerCase() === match.data.home.username && match.isUpdate(text) && text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === match.data.home.username && match.isUpdate(update)
+			
 			text = text.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
 		  	
 		  	match.update(text);
@@ -223,50 +241,48 @@ function stream(){
 		}
 
 	});
+
+	stream.on('reconnect', function (request, response, connectInterval) {
+		notify.log(colors.green("attempt reconnect in: " + connectInterval + "s"));
+	});
 }
 
 ////// Test Posts -- REPLACE checkConnection(); in production
-var poster = function (){ //TODO: Should poster(), tweetsSinceDisconnect(), and checkConnection() be separated/modulized??
+// var poster = function (){ //TODO: Should poster(), missedUpdates(), and checkConnection() be separated/modulized??
 	
-	var minute =  1;
-	var test = function(){
-		checkConnection(); // REPLACE THIS IN PROD
-		var date = new Date();
+// 	var minute =  1;
 
-		tweet = minute + "' - " + date.getTime();
-		twitter.post('statuses/update', { status: tweet }, function(err, data, response){});
-		if(minute === 90){
-			minute = 1;
-		} else {
-			minute++;
-		}
-		setTimeout(test, 60000);
-	};
+// 	var test = function(){ // recursive loop
+// 		// checkConnection(); // runs a twitter.get // REPLACE THIS IN PROD
+// 		var date = new Date(); // just for some arbitrary data
 
-	setTimeout(test, 5000);
-};
+// 		var tweet = minute + "' - " + date.getTime();
 
-var tweetsSinceDisconnect = function(statuses){
-	var newUpdates = [];
-	for(var i = 0; i < statuses.length; i++){
-		if(statuses[i].id > match.lastTweet && isMatchUpdate(statuses[i].text)){
-			newUpdates.push(statuses[i].text);
-		}
-	}
-	return newUpdates;
-};
+// 		twitter.post('statuses/update', { status: tweet }, function(err, data, response){
+// 			if(err){
+// 				notify.log("post error: " + err.errno);
+// 			} else {
+// 				// notify.log("post! - " + tweet);
+// 			}	
+// 		});
+// 			if(minute === 90){ // go up to 90' then start over.
+// 				minute = 1;
+// 			} else {
+// 				minute++;
+// 			}
+// 		setTimeout(test, 60000); // loop back
+// 	};
+
+// 	setTimeout(test, 5000); //start the loop
+// };
 
 var checkConnection = function(){ 
 	///// When not testing with poster() check every 5 mins
-	////
-	///
-	//
 	twitter.get('search/tweets', {q: 'from:' + match.data.home.username, count: 90}, function(error, data, response){
 		if (error) {
-			// TODO: better error message
 			notify.log("error: " + error.errno);
 		} else {
-			var updates = tweetsSinceDisconnect(data.statuses.reverse());
+			var updates = match.missedUpdates(data.statuses.reverse());
 			if (updates){
 				match.data.updates = match.data.updates.concat(updates);
 				updates = [];
@@ -304,7 +320,7 @@ function cherrypicker(){
 			getUserInput(function(userInput){
 				match.input(userInput);
 				stream();
-				poster();
+				// poster();
 			    postThread(make.title(), make.post()); ///// MAKE A POST	
 			});
 
