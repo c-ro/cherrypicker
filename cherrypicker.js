@@ -46,6 +46,7 @@ var match = { //TODO: Should this be an immediately invoked module?
     },
 
     update: function(string){
+    	string = string.replace(/\n/g, '');
     	this.data.updates.push(string);
     },
 
@@ -202,7 +203,14 @@ var make = function(){
 	};
 
 	make.post = function(){
-		return mrk.section(make.header()) + mrk.section(make.stream()) + mrk.section(mrk.list(match.data.updates));
+		return mrk.section(make.header()) + 
+		mrk.section(make.stream()) + 
+		mrk.section(
+			"Updates via " + 
+			mrk.link(match.data.home.username, "@") + 
+			mrk.br() + 
+			mrk.list(match.data.updates)
+			);
 	};
 
 	return make;
