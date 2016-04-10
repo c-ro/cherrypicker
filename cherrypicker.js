@@ -46,7 +46,7 @@ var match = { //TODO: Should this be an immediately invoked module?
     },
 
     update: function(string){
-    	string = string.replace(/\n/g, '');
+    	string = string.replace(/\n/g, ' ');
     	this.data.updates.push(string);
     },
 
