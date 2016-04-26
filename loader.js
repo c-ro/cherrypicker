@@ -66,6 +66,16 @@ var display = function(){
         }
     }};
 
+    handler.new = function(array, highlightIndex){
+        for(var i = 0; i < array.length; i++){
+        
+        if(i === highlightIndex - 1){
+            console.log(colors.green((i + 1) + ": " + array[i]) + " " + "NEW".inverse);
+        } else {
+            console.log((i + 1) + ": " + array[i]);
+        }
+    }};
+
     handler.deleted = function(array, removedUpdate, highlightIndex){
         for(var i = 0; i < array.length; i++){
         
@@ -116,6 +126,26 @@ var display = function(){
 
             obj.updates[index - 1] = newString;
             display.edits(obj.updates, index);
+        
+        } else if (line.indexOf('new update') > -1) {
+/// >new update [index] "string" or new update "string"
+            var index = obj.updates.length,
+                newString;
+
+            try {
+                newString = line.match(/"(.*?)"/)[1];
+            } catch (e) {
+                return console.log("Use 'new update [index] \"string\"' or 'new update \"string\"'".yellow);
+            }
+
+            if(line.split(' ')[2].length === 1){
+                index = line.split(' ')[2] - 1;
+                obj.updates.splice(index, 0, newString);
+            } else {
+                obj.updates.push(newString);
+            }
+
+            display.new(obj.updates, (index + 1));
         
         } else if (line.indexOf('delete update') > -1) {
 /// >delete update [index]
