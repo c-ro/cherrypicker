@@ -39,4 +39,8 @@ You can interact with cherrypickers match update data in the following ways:
 ```
   2. delete an update `delete update [index]`
   3. edit an update `edit update [index] "string"`
+  4. create a new update either at the end of the current list:
+    `new update "cool new update`
+    or inserted at the index of your choice:
+    `new update [index] "cool new update"`
 
