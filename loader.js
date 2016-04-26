@@ -21,26 +21,40 @@ function handleFile(buffer, _, next){
 var rl = readline.createInterface(process.stdin, process.stdout);
 
 function getMatchData(string){
+    // if function is called with no arguments query user for filename
     if(!string){
         rl.pause();
-
         rl.question('enter match file: ', (string) => {
             read(string);
         });
     } else {
+        // if function is cal,led with argument create read stream
         read(string);
     }
 
     function read(string){
-        fs.createReadStream(string)
-            .pipe(through(handleFile));
+        var stream = fs.createReadStream(string);
+
+            stream.on('open', function(){
+                stream.pipe(through(handleFile));
+            });
+
+            stream.on('error', function(err){
+                console.log("bad filename or path".red);
+                getMatchData();
+            });
          // .pipe(process.stdout);
     }
 }
 
-function displayArray(array){
+function displayArray(array, highlightIndex){
     for(var i = 0; i < array.length; i++){
-        console.log((i + 1) + ": " + array[i]);
+        
+        if(i === highlightIndex - 1){
+            console.log(colors.green((i + 1) + ": " + array[i]));
+        } else {
+            console.log((i + 1) + ": " + array[i]);
+        }
     }
 }
 
@@ -59,43 +73,42 @@ function removeFromArray(index, array){
 
     rl.on('line', (line) => {
         if(line.indexOf('load') > -1){
+/// load OR load path/to/file.json
+            var string;
+            
+            try {
+                string = line.split(' ')[1];
+            } catch (e) {
+                return  getMatchData();
+            }
+            
+            return  getMatchData(string);
 
-            return getMatchData();
-        
         } else if (line.indexOf('edit update') > -1) {
+/// edit update [index] "string"
+            var newString,
+                index = line.split(' ')[2];
 
-            var i = line.split(' ')[2];
-            //should capture anything in quotes
-            obj.updates[i - 1] = line.split(' ')[3];
-            console.log(obj.updates[i - 1]);
+            try {
+                newString = line.match(/"(.*?)"/)[1];
+            } catch (e) {
+                return console.log("Use 'edit update [index] \"string\"'".yellow);
+            }
+
+            obj.updates[index - 1] = newString;
+            displayArray(obj.updates, index);
         
         } else if (line.indexOf('delete update') > -1) {
-
-            var i = line.split(' ')[2];
-            removeFromArray(i - 1, obj.updates);
+            var index = line.split(' ')[2];
+            removeFromArray(index - 1, obj.updates);
             displayArray(obj.updates);
-        
+
         } else if (line.indexOf('updates') > -1) {
             displayArray(obj.updates);
 
         } else {
             console.log('UNKNOWN COMMAND: `' + line.trim() + '`');
         }
-
-      // switch(line.trim()) {
-      //   case 'load':
-      //       getMatchData();
-      //       break;
-      //   case 'updates':
-      //       displayArray(obj.updates);
-      //       break;
-      //   case (line.indexOf("edit updates") > -1):
-      //       console.log(line.split(' ')[2]);
-      //       break;
-      //   default:
-      //       console.log('Say what? I might have heard `' + line.trim() + '`');
-      //       break;
-      //}
       rl.prompt();
     }).on('close', () => {
       console.log('Have a great day!');
