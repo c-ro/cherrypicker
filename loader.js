@@ -40,27 +40,46 @@ function getMatchData(string){
             });
 
             stream.on('error', function(err){
-                console.log("bad filename or path".red);
+                console.log("bad filename or path".yellow);
                 getMatchData();
             });
          // .pipe(process.stdout);
     }
 }
 
-function displayArray(array, highlightIndex){
-    for(var i = 0; i < array.length; i++){
+var display = function(){
+    var handler = {};
+
+    handler.print = function(array){
+        for(var i = 0; i < array.length; i++){
+            console.log((i + 1) + ": " + array[i]);
+        }
+    };
+
+    handler.edits = function(array, highlightIndex){
+        for(var i = 0; i < array.length; i++){
         
         if(i === highlightIndex - 1){
-            console.log(colors.green((i + 1) + ": " + array[i]));
+            console.log(colors.green((i + 1) + ": " + array[i]) + " " + "EDITED".inverse);
         } else {
             console.log((i + 1) + ": " + array[i]);
         }
-    }
-}
+    }};
 
-function removeFromArray(index, array){
-    array.splice(index, 1);
-}
+    handler.deleted = function(array, removedUpdate, highlightIndex){
+        for(var i = 0; i < array.length; i++){
+        
+        if(i === highlightIndex - 1){
+            console.log(colors.red((i + 1) + ": " + removedUpdate) + " " + "DELETED".inverse);
+            console.log((i + 1) + ": " + array[i]);
+        } else {
+            console.log((i + 1) + ": " + array[i]);
+        }
+    }};
+
+
+    return handler;
+}();
 
 (function cli(){
 
@@ -73,7 +92,7 @@ function removeFromArray(index, array){
 
     rl.on('line', (line) => {
         if(line.indexOf('load') > -1){
-/// load OR load path/to/file.json
+/// >load OR >load path/to/file.json
             var string;
             
             try {
@@ -85,7 +104,7 @@ function removeFromArray(index, array){
             return  getMatchData(string);
 
         } else if (line.indexOf('edit update') > -1) {
-/// edit update [index] "string"
+/// >edit update [index] "string"
             var newString,
                 index = line.split(' ')[2];
 
@@ -96,15 +115,16 @@ function removeFromArray(index, array){
             }
 
             obj.updates[index - 1] = newString;
-            displayArray(obj.updates, index);
+            display.edits(obj.updates, index);
         
         } else if (line.indexOf('delete update') > -1) {
+/// >delete update [index]
             var index = line.split(' ')[2];
-            removeFromArray(index - 1, obj.updates);
-            displayArray(obj.updates);
-
+            var removed = obj.updates.splice(index -1, 1);
+            display.deleted(obj.updates, removed, index);
         } else if (line.indexOf('updates') > -1) {
-            displayArray(obj.updates);
+/// print >updates              
+            display.print(obj.updates);
 
         } else {
             console.log('UNKNOWN COMMAND: `' + line.trim() + '`');
