@@ -1,5 +1,5 @@
 //// Test Posts -- REPLACE checkConnection(); in production
-var poster = function (){ //TODO: Should poster(), missedUpdates(), and checkConnection() be separated/modulized??
+var poster = function (){
 	
 	var minute =  1;
 

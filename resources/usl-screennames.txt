@@ -1,5 +1,6 @@
 Vancouver Whitecaps
 @WhitecapsFC
+/r/whitecapsfc
 
 Richmond Kickers
 @RichmondKickers
@@ -9,6 +10,7 @@ Rochester Rhinos
 
 PghRiverhounds
 @PghRiverhounds
+/r/Riverhounds
 
 Wilmington Hammerheads FC
 @WilmHammerheads
@@ -54,6 +56,7 @@ Arizona United Soccer
 
 Louisville City FC
 @loucityfc
+/r/LouisvilleCityFC
 
 LouCityMatchDay
 @LouCityMatchDay
@@ -100,3 +103,4 @@ Orlando City B
 
 Swope Park Rangers KC
 @swoperangers
+/r/SwopeParkRangers

@@ -6,5 +6,6 @@
 	"date": "4/7/16",
 	"time": "8:05",
     "stream": "http://www.youtube.com/homecitychannel",
-    "targetSub": "ncisfanclub"
+    "targetSub": "ncisfanclub",
+    "xSub": "test"
 }

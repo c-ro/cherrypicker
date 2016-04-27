@@ -1,22 +1,21 @@
-#!/usr/bin/env node
+ // #!/usr/bin/env node
 
 //local dependencies
-var make = require('./make.js');
 var twitter = require('./twitfuncs.js');
 var reddit = require('./snoofuncs.js');
 var twitter = require('./twitfuncs.js');
-// TODO: should display and notify be one module? (probably)
 var display = require('./display.js');
 var notify = require('./notify.js');
+// TODO: Notify is kind of annoying now that we're doing interactive stuff in the terminal.  Maybe notify of edits with timestamp and new update?
 
 // other node dependencies
-var prompt = require('prompt'); // TODO: fold this into readline?
+var prompt = require('prompt');
 var colors = require('colors');
 var split = require('split');
 var through = require('through2').obj;
 var readline = require('readline');
 
-var match = function(){ //TODO: Should be updated by CLI input (either manual string entry or object from fs.createReadStream)
+var match = function(){
 
     var data = {};
 
@@ -38,6 +37,8 @@ var match = function(){ //TODO: Should be updated by CLI input (either manual st
 
 	    data.sub = "";
 
+        data.xsub = "";
+
    	 	data.updates = ["0' - Get hyped."];
 
    	 	// script logs the id of the last tweet so it can check for missed updates after a disconnect
@@ -54,6 +55,7 @@ var match = function(){ //TODO: Should be updated by CLI input (either manual st
 	    	data.away.username =  input.awayUsername.toLowerCase();
 	    	data.stream = input.stream;
 	    	data.sub = input.targetSub.toLowerCase();
+            data.xsub = input.xSub.toLowerCase();
 	    	// console.log(colors.cyan("Match Thread starting with this data: \n"), data);
 	    };
 
@@ -274,4 +276,4 @@ var match = function(){ //TODO: Should be updated by CLI input (either manual st
 })();
 
 ///// Get Input
-// TODO: should be option as part of CLI
+// TODO: If `start` runs without data in the match object get user input

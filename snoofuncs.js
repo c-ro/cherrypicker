@@ -15,6 +15,25 @@ module.exports = function(){
 	var reddit = {};
 	var match;
 
+	xpost = function(){
+		setTimeout(
+			snoo('/api/submit').post({
+			  api_type: "json",
+			  kind: "link",
+			  url: match.thread.url,
+			  title: make.title(),
+			  sr: match.xsub
+			}).then(function(response){
+				
+				if(response.errors){
+					console.log("ERROR snoo.post: " + response.errors);
+				}
+
+				var xpost = response.json.data;
+				process.stdout.write(colors.cyan("XPOST: " + " [" + xpost.id + "] " + xpost.url) + "\n");
+			}), 300000);
+	};
+
 	///// Get/Store user data object
 	reddit.login = function(){
 		snoo('/api/v1/me').get().then(function(result){
@@ -27,7 +46,7 @@ module.exports = function(){
 	};
 
 	///// Post to Reddit 
-	reddit.post = function(object){ // TODO: Should this be a method on the match object?
+	reddit.post = function(object){
 		
 		match = object; // hoist incoming match data to parent function
 		
@@ -45,9 +64,8 @@ module.exports = function(){
 			}
 
 			match.thread = response.json.data;
-
 			process.stdout.write(colors.cyan("THREAD ID/URL: " + " [" + match.thread.id + "] " + match.thread.url) + "\n");
-
+			xpost();
 		});
 	};
 
