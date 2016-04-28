@@ -15,23 +15,41 @@ module.exports = function(){
 	var reddit = {};
 	var match;
 
-	xpost = function(){
-		setTimeout(
-			snoo('/api/submit').post({
-			  api_type: "json",
-			  kind: "link",
-			  url: match.thread.url,
-			  title: make.title(),
-			  sr: match.xsub
-			}).then(function(response){
-				
-				if(response.errors){
-					console.log("ERROR snoo.post: " + response.errors);
-				}
+	// snoo.on('rate_limit', function(data) {
+	//   // responds with the header data returned from reddit on
+	//   // every response
+	//   console.log(data.rateLimitUsed, 
+	//               data.rateLimitRemaining, 
+	//               data.rateLimitReset);
+	// }); 
 
-				var xpost = response.json.data;
-				process.stdout.write(colors.cyan("XPOST: " + " [" + xpost.id + "] " + xpost.url) + "\n");
-			}), 300000);
+	function retry(fn, time){
+		console.log("retrying in " + ((time + 10000)/1000) + " seconds.");
+		setTimeout(fn, time + 10000);
+	}
+
+	reddit.xpost = function(){
+		snoo('/api/submit').post({
+		  api_type: "json",
+		  kind: "link",
+		  url: match.thread.url,
+		  title: make.title(),
+		  sr: match.xsub
+		})
+
+		.then(function(response){
+			var xpost = response.json.data;
+			process.stdout.write(colors.cyan("XPOST: " + " [" + xpost.id + "] " + xpost.url) + "\n");
+		})
+
+		.catch(function(error){
+			var response = JSON.parse(error.body).json;
+			if(response.ratelimit){
+				retry(xpost, response.ratelimit * 1000);
+			} else {
+				console.log(response);
+			}
+		});
 	};
 
 	///// Get/Store user data object
@@ -51,21 +69,35 @@ module.exports = function(){
 		match = object; // hoist incoming match data to parent function
 		
 		reddit.login();
+
 		snoo('/api/submit').post({
 		  api_type: "json",
 		  kind: "self",
 		  text: make.post(), //raw markdown string
 		  title: make.title(),
 		  sr: match.sub
-		}).then(function(response){
+		})
+
+		.then(function(response){
 			
 			if(response.errors){
 				console.log("ERROR snoo.post: " + response.errors);
+				if(response.errors[1] === "ratelimit"){
+					retry(function(){ reddit.post(object); }, response.ratelimit);
+				}
 			}
 
 			match.thread = response.json.data;
 			process.stdout.write(colors.cyan("THREAD ID/URL: " + " [" + match.thread.id + "] " + match.thread.url) + "\n");
-			xpost();
+		})
+
+		.catch(function(error){
+			var response = JSON.parse(error.body).json;
+			if(response.ratelimit){
+				retry(function(){ reddit.post(object); }, response.ratelimit * 1000);
+			} else {
+				console.log(response);
+			}
 		});
 	};
 
@@ -87,13 +119,20 @@ module.exports = function(){
 				api_type: 'json', //the string 'json'
 				text: string, // incoming markdown string
 				thing_id: match.thread.name // fullname of a thing created when the reddit post was made
-			}).then(function(response){
-				if (response.json.errors.length > 0){
-					console.log("EDIT ERROR", response);
-				} else {
+			})
+
+			.then(function(response){
 					var title = response.json.data.things[0].data.title; // things is an array, wtf?
 					notify.log("EDITED: " + title + "\r");
-				}	
+			})
+
+			.catch(function(error){
+			var response = JSON.parse(error.body).json;
+				if(response.ratelimit){
+					retry(reddit.edit, response.ratelimit * 1000);
+				} else {
+					console.log(response);
+				}
 			});
 
 		});

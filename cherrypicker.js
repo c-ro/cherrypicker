@@ -18,32 +18,23 @@ var readline = require('readline');
 var match = function(){
 
     var data = {};
-
     	data.home = {
 	        team: "",
 	        username: "",
 	        score: 0
 	    };
-
 	    data.away = {
 	        team: "",
 	        username: "",
 	        score: 0
 	    };
-
 	    data.time = "";
-
 	    data.stream = "";
-
 	    data.sub = "";
-
         data.xsub = "";
-
    	 	data.updates = ["0' - Get hyped."];
-
    	 	// script logs the id of the last tweet so it can check for missed updates after a disconnect
 	    data.lastTweet = "";
-
 	    // thread data returned from Reddit.
 	    data.thread = {};
 
@@ -55,7 +46,7 @@ var match = function(){
 	    	data.away.username =  input.awayUsername.toLowerCase();
 	    	data.stream = input.stream;
 	    	data.sub = input.targetSub.toLowerCase();
-            data.xsub = input.xSub.toLowerCase();
+            data.xsub = input.xSub ? input.xSub.toLowerCase() : null;
 	    	// console.log(colors.cyan("Match Thread starting with this data: \n"), data);
 	    };
 
@@ -253,9 +244,10 @@ var match = function(){
             display.print(obj.updates);
 
         } else if (line.indexOf('start') > -1) {
-/// start stream/thread
-		reddit.post(match.data);
-		twitter.go(match);
+/// start stream/thread    
+            reddit.post(match.data);        
+            if(match.data.xsub){ setTimeout(reddit.xpost, 300000); }
+            twitter.go(match);
 
         } else if (line.indexOf('match') > -1) {
         	console.log(match.data);
