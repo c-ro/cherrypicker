@@ -20,6 +20,19 @@ module.exports = function(){
 
 		stream.on('connected', function (response) {
 			console.log(colors.green("twitter stream connection. . ." + response.statusMessage));
+
+			// Check to see if we'be missed any tweets
+			twit.get('search/tweets', {q: 'from:' + match.data.home.username, count: 90}, function(error, data, response){
+				if (error) {
+					notify.log("error: " + error.errno);
+				} else {
+					var updates = match.funcs.missedUpdates(data.statuses.reverse());
+					if (updates){
+						match.data.updates = match.data.updates.concat(updates);
+						updates = [];
+					 }
+				}
+			});
 		});
 
 		stream.on('tweet', function (tweet) {
@@ -41,35 +54,18 @@ module.exports = function(){
 		});
 
 		stream.on('disconnect', function (disconnectMessage) {
-			console.log(disconnectMessage);
+			console.log("disconnected");
 			// setTimeout(twitter.go, 300000);
 		});
 
+		var lastInterval;
 		stream.on('reconnect', function(request, response, connectInterval){
-			notify.log(colors.green("attempt reconnect in: " + connectInterval + "s"));
-			console.log(response);
-		});
-
-		// var updates = match.funcs.missedUpdates(data.statuses.reverse());
-		// 		if (updates){
-		// 			match.data.updates = match.data.updates.concat(updates);
-		// 			updates = [];
-		// 		}
-
-
-	};
-
-	var checkConnection = function(){ 
-		///// When not testing with poster() check every 5 mins
-		twit.get('search/tweets', {q: 'from:' + match.data.home.username, count: 90}, function(error, data, response){
-			if (error) {
-				notify.log("error: " + error.errno);
+			if(lastInterval === 0 && connectInterval === 0){
+				stream.stop();
+				twitter.go(match);
 			} else {
-				var updates = match.funcs.missedUpdates(data.statuses.reverse());
-				if (updates){
-					match.data.updates = match.data.updates.concat(updates);
-					updates = [];
-				}
+				console.log("will attempt reconnect: " + connectInterval);
+				lastInterval = connectInterval;
 			}
 		});
 	};
