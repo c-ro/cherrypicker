@@ -12,7 +12,7 @@ module.exports = function(){
 	////// start listening to twitter
 	twitter.go = function(object){
 		match = object;
-		var stream = twit.stream('user', {screen_name: 'cherrypickerusl'});
+		var stream = twit.stream('user', {screen_name: match.data.home.username});
 
 		stream.on('error', function (error) {
 		  console.log(error.message);
@@ -26,7 +26,7 @@ module.exports = function(){
 
 			var text = tweet.text;
 
-			if(tweet.user.screen_name.toLowerCase() === match.data.home.username && match.funcs.isUpdate(text) && text.indexOf('http:') === -1){ //tweet.user.screen_name.toLowerCase() === match.home.username && match.isUpdate(update)
+			if(match.funcs.isUpdate(text) && text.indexOf('http:') === -1){
 				
 				text = text.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
 			  	
@@ -40,9 +40,23 @@ module.exports = function(){
 
 		});
 
-		stream.on('reconnect', function (request, response, connectInterval) {
-			notify.log(colors.green("attempt reconnect in: " + connectInterval + "s"));
+		stream.on('disconnect', function (disconnectMessage) {
+			console.log(disconnectMessage);
+			// setTimeout(twitter.go, 300000);
 		});
+
+		stream.on('reconnect', function(request, response, connectInterval){
+			notify.log(colors.green("attempt reconnect in: " + connectInterval + "s"));
+			console.log(response);
+		});
+
+		// var updates = match.funcs.missedUpdates(data.statuses.reverse());
+		// 		if (updates){
+		// 			match.data.updates = match.data.updates.concat(updates);
+		// 			updates = [];
+		// 		}
+
+
 	};
 
 	var checkConnection = function(){ 
