@@ -4,6 +4,8 @@ var keys = require('./keys.js');
 var mrk = require('../markers/markers.js');
 var colors = require('colors');
 var notify = require('./notify.js');
+var hrt = require('human-readable-time');
+	var clock = new hrt('hh:mm');
 
 module.exports = function(){
 	////// Authenticate Reddit
@@ -15,14 +17,6 @@ module.exports = function(){
 	var reddit = {};
 	var match;
 
-	// snoo.on('rate_limit', function(data) {
-	//   // responds with the header data returned from reddit on
-	//   // every response
-	//   console.log(data.rateLimitUsed, 
-	//               data.rateLimitRemaining, 
-	//               data.rateLimitReset);
-	// }); 
-
 	function retry(fn, time){
 		console.log("retrying in " + ((time + 10000)/1000) + " seconds.");
 		setTimeout(fn, time + 10000);
@@ -33,21 +27,21 @@ module.exports = function(){
 		  api_type: "json",
 		  kind: "link",
 		  url: match.thread.url,
-		  title: make.title(),
+		  title: make.awaytitle(),
 		  sr: match.xsub
 		})
 
 		.then(function(response){
 			var xpost = response.json.data;
-			process.stdout.write(colors.cyan("XPOST: " + " [" + xpost.id + "] " + xpost.url) + "\n");
+			process.stdout.write(colors.yellow("XPOST: " + " [" + xpost.id + "] " + xpost.url) + "\n");
 		})
 
 		.catch(function(error){
 			var response = JSON.parse(error.body).json;
 			if(response.ratelimit){
-				retry(xpost, response.ratelimit * 1000);
+				retry(reddit.xpost, response.ratelimit * 1000);
 			} else {
-				console.log(response);
+				console.log(colors.yellow(response));
 			}
 		});
 	};
@@ -56,9 +50,9 @@ module.exports = function(){
 	reddit.login = function(){
 		snoo('/api/v1/me').get().then(function(result){
 			if (!result.id){
-				console.log("Reddit Connection Error");
+				console.log(colors.yellow("Reddit Connection Error"));
 			} else {
-				console.log(colors.magenta("Logged into reddit as " + result.name + " with id: " + result.id));
+				console.log(colors.yellow("Logged into reddit as " + result.name + " with id: " + result.id));
 			}
 		});
 	};
@@ -79,16 +73,9 @@ module.exports = function(){
 		})
 
 		.then(function(response){
-			
-			if(response.errors){
-				console.log("ERROR snoo.post: " + response.errors);
-				if(response.errors[1] === "ratelimit"){
-					retry(function(){ reddit.post(object); }, response.ratelimit);
-				}
-			}
 
 			match.thread = response.json.data;
-			process.stdout.write(colors.cyan("THREAD ID/URL: " + " [" + match.thread.id + "] " + match.thread.url) + "\n");
+			process.stdout.write(colors.yellow("THREAD ID/URL: " + " [" + match.thread.id + "] " + match.thread.url) + "\n");
 		})
 
 		.catch(function(error){
@@ -103,39 +90,45 @@ module.exports = function(){
 
 	///// Edit a post
 	reddit.edit = function(){
-		/// check post for manual edits
-		snoo('/r/$subreddit/comments/$article').get({
-			 $subreddit: match.sub,
-			 $article: match.thread.id
-		}).then(function(result){
-			//// get edits and add to generated post string
-			var post = result[0].data.children[0].data.selftext; // Get whole selftext
-			var index = post.lastIndexOf("*****") + 5;  // Generated post must end with horizontal rule, cherrypicker uses this to find manual edits.
-			var edits = post.slice(index, post.length); // Get the manually added edits
-			string = make.post() + edits; // add the edits to the incoming generated markdown string
-		}).then(function(){
-			/// send the edit request to reddit
-			snoo('/api/editusertext').post({
-				api_type: 'json', //the string 'json'
-				text: string, // incoming markdown string
-				thing_id: match.thread.name // fullname of a thing created when the reddit post was made
+		if(match.thread.id){
+			/// check post for manual edits
+			snoo('/r/$subreddit/comments/$article').get({
+				 $subreddit: match.sub,
+				 $article: match.thread.id
+			})
+
+			.then(function(result){
+				//// get edits and add to generated post string
+				var post = result[0].data.children[0].data.selftext; // Get whole selftext
+				var index = post.lastIndexOf("*****") + 5;  // Generated post must end with horizontal rule, cherrypicker uses this to find manual edits.
+				var edits = post.slice(index, post.length); // Get the manually added edits
+				string = make.post() + edits; // add the edits to the incoming generated markdown string
+			})
+
+			.then(function(){
+				/// send the edit request to reddit
+				snoo('/api/editusertext').post({
+					api_type: 'json', //the string 'json'
+					text: string, // incoming markdown string
+					thing_id: match.thread.name // fullname of a thing created when the reddit post was made
 			})
 
 			.then(function(response){
-					var title = response.json.data.things[0].data.title; // things is an array, wtf?
-					notify.log("EDITED: " + title + "\r");
+						var title = response.json.data.things[0].data.title; // things is an array, wtf?
+						notify.log("[ " + clock(new Date(0)) + "] UPDATE: " + title + "\r");
 			})
 
 			.catch(function(error){
-			var response = JSON.parse(error.body).json;
-				if(response.ratelimit){
-					retry(reddit.edit, response.ratelimit * 1000);
-				} else {
-					console.log(response);
-				}
-			});
+				var response = JSON.parse(error.body).json;
+					if(response.ratelimit){
+						retry(reddit.edit, response.ratelimit * 1000);
+					} else {
+						console.log(colors.yellow(response));
+					}
+				});
 
-		});
+			});
+		}
 	};
 
 	// TEMPLATE HELPERS
@@ -144,6 +137,10 @@ module.exports = function(){
 
 		make.title = function(){
 			return "[Match Thread] " + match.home.team + " vs. " + match.away.team; // add match time
+		};
+
+		make.awaytitle = function(){
+			return "[Match Thread] " + match.away.team + " @ " + match.home.team; // add match time
 		};
 
 		make.header = function(){

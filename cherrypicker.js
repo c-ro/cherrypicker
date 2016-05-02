@@ -80,7 +80,7 @@ var match = function(){
 			}
 			
 			return newUpdates;
-		};
+		}; 
 
 	return {
 		data: data,
@@ -95,6 +95,10 @@ var match = function(){
     obj;
 
     var rl = readline.createInterface(process.stdin, process.stdout);
+
+    if(process.argv[2]){
+        getMatchData(process.argv[2]);
+    }
 
     function getMatchData(string){
         // if function is called with no arguments query user for filename
@@ -114,7 +118,7 @@ var match = function(){
                 stream.on('open', function(){
                     stream.pipe(through(handleFile));
                 });
-
+                
                 stream.on('error', function(err){
                     console.log("bad filename or path".yellow);
                     getMatchData();
@@ -125,17 +129,13 @@ var match = function(){
         // through2 function to  parse match data object
         function handleFile(buffer, _, next){
             obj = JSON.parse(buffer);
-            notification = "Match Data Loaded for ".red + JSON.stringify(obj.homeTeam).cyan + " vs. ".cyan + JSON.stringify(obj.awayTeam).cyan;
+            notification = "Match Data Loaded for ".magenta + JSON.stringify(obj.homeTeam).green + " vs. ".green + JSON.stringify(obj.awayTeam).green;
             console.log(notification);
             match.funcs.input(obj);
             obj = match.data;
             this.push(buffer);
             next();
         }
-    }
-
-    if(process.argv[2]){
-        getMatchData(process.argv[2]);
     }
 
     function getUserInput(callback){
@@ -181,7 +181,7 @@ var match = function(){
 		}	
 	}
 
-    rl.setPrompt('cherry > ');
+    rl.setPrompt('cherrypicker > ');
     rl.prompt();
 
     rl.on('line', (line) => {

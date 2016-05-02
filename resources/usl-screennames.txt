@@ -4,6 +4,7 @@ Vancouver Whitecaps
 
 Richmond Kickers
 @RichmondKickers
+/r/RichmondKickers
 
 Rochester Rhinos
 @RochesterRhinos
@@ -14,15 +15,18 @@ PghRiverhounds
 
 Wilmington Hammerheads FC
 @WilmHammerheads
+/r/WilmingtonHammerheads
 
 Impact de Montréal
 @impactmontreal 
 
 Harrisburg City Islanders
 @city_islanders
+/r/cityislanders
 
 Charleston Battery
 @Chas_Battery
+/r/charlestonbattery
 
 Austin Aztex
 @Aztex_MatchCast
@@ -94,6 +98,7 @@ FC Montréal
 
 FC Cincinnati
 @fccincinnati
+/r/FCCincinnati
 
 Bethlehem Steel FC
 @bsteelfc

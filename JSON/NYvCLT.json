@@ -1,0 +1,11 @@
+{
+	"homeTeam": "New York Red Bulls II",
+    "homeUsername": "NYRBII",
+    "awayTeam": "Charlotte Independence",
+    "awayUsername": "CLTIndependence",
+	"date": "5/1/16",
+	"time": "4:00pm",
+    "stream": "https://youtu.be/vbnu_COJctI",
+    "targetSub": "rbny",
+    "xSub": "charlotteindependence"
+}

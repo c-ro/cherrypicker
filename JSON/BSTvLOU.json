@@ -1,0 +1,11 @@
+{
+	"homeTeam": "Bethlehem Steel FC",
+    "homeUsername": "BSteelFC",
+    "awayTeam": "Louisville City FC",
+    "awayUsername": "loucityfc",
+	"date": "5/1/16",
+	"time": "3:00pm",
+    "stream": "https://www.youtube.com/embed/YRfnCMUedHM",
+    "targetSub": "BSFC",
+    "xSub": "LouisvilleCityFC"
+}

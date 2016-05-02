@@ -19,7 +19,7 @@ module.exports = function(){
 		});
 
 		stream.on('connected', function (response) {
-			console.log(colors.green("twitter stream connection. . ." + response.statusMessage));
+			console.log(colors.cyan("twitter stream connection. . ." + response.statusMessage));
 
 			// Check to see if we'be missed any tweets
 			twit.get('search/tweets', {q: 'from:' + match.data.home.username, count: 90}, function(error, data, response){
@@ -39,7 +39,7 @@ module.exports = function(){
 
 			var text = tweet.text;
 
-			if(match.funcs.isUpdate(text) && text.indexOf('http:') === -1){
+			if(tweet.user.screen_name.toLowerCase() === match.data.home.username && match.funcs.isUpdate(text) && text.indexOf('http:') === -1){
 				
 				text = text.replace(/\S*#(?:\[[^\]]+\]|\S+)/, '');
 			  	
@@ -64,7 +64,7 @@ module.exports = function(){
 				stream.stop();
 				twitter.go(match);
 			} else {
-				console.log("will attempt reconnect: " + connectInterval);
+				console.log(colors.cyan("will attempt reconnect: " + connectInterval));
 				lastInterval = connectInterval;
 			}
 		});
