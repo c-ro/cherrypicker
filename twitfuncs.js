@@ -11,8 +11,10 @@ module.exports = function(){
 	var match;
 	////// start listening to twitter
 	twitter.go = function(object){
+		//TODO:  will need to figure out logic for using multiple match objects inside one instance of Twit
+		// Perhaps send match object with every request but twitter.go?
 		match = object;
-		var stream = twit.stream('user', {screen_name: match.data.home.username});
+		var stream = twit.stream('user', {screen_name: match.data.home.username}); //TODO: test twit.username
 
 		stream.on('error', function (error) {
 		  console.log(error.message);

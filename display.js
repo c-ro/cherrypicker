@@ -11,6 +11,12 @@ var display = function(){
         }
     };
 
+    handler.matches = function(array){
+        for(var i = 0; i < array.length; i++){
+            console.log((i + 1) + ": " + array[i].name);
+        }
+    };
+
     handler.edits = function(array, highlightIndex){
         for(var i = 0; i < array.length; i++){
         
