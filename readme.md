@@ -57,6 +57,11 @@ You can load a file in three ways:
     enter match file: yourfilename.json
 ```
 
+###Select a match:
+You can load multiple match files and run them simultaneously.  You can interact with individual matches by swtiching match context like so:
+1. Display all loaded matches: `match`
+2. Select a match from the list by index or name (filename minus extension): `match [index]` or `match [name]` 
+
 ###Start cherrypicking
 Once your match object is loaded just run `start`
 

@@ -28,6 +28,7 @@ module.exports = function(){
 				if (error) {
 					notify.log("error: " + error.errno);
 				} else {
+					// TODO: incorrent header check [TypeError: Cannot read property 'missedUpdates' of undefined]
 					var updates = match.funcs.missedUpdates(data.statuses.reverse());
 					if (updates){
 						match.data.updates = match.data.updates.concat(updates);

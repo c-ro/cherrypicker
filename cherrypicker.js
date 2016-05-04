@@ -18,12 +18,13 @@ var readline = require('readline');
 (function cli(){
 
     var fs = require('fs');
-    var matchArray = []; //{name: filename, match: { ... }}
+    var matchArray = [];
     var current = null; //TODO: used void current??
+    twitter.go(); //TODOL start Twit with just cherrypicker data, divvy up updates by an array of home team usernames
 
     var newMatch = function(filename, obj){
         var newMatch = new match();
-        matchArray.push({name: filename.split('.')[0], match: newMatch}); //TODO: make filename the "name" property on the match object.
+        matchArray.push({match: newMatch}); //TODO: make filename the "name" property on the match object.
 
         newMatch.input(obj);
     };
@@ -59,6 +60,7 @@ var readline = require('readline');
         // through2 function to  parse match data object
         function handleFile(buffer, _, next){
             obj = JSON.parse(buffer);
+            obj.name = filename.split('.')[0];
             console.log("Match Data Loaded for ".magenta + JSON.stringify(obj.homeTeam).green + " vs. ".green + JSON.stringify(obj.awayTeam).green);
             newMatch(filename, obj); //use filename variable hoisted from read
             this.push(buffer);
@@ -172,6 +174,68 @@ var readline = require('readline');
                 }
             }
         }
+// Exit match context
+        else if(line.indexOf('home') > -1){
+            current = null;
+            display.matches(matchArray);
+        }
+/// >edit update [index] "string"
+        else if (line.indexOf('edit update') > -1) {
+                    var newString,
+                        index = line.split(' ')[2];
+
+                    try {
+                        newString = line.match(/"(.*?)"/)[1];
+                    } catch (e) {
+                        return console.log("Use 'edit update [index] \"string\"'".yellow);
+                    }
+
+                    current.updates[index - 1] = newString;
+                    display.edits(current.updates, index);
+                    reddit.edit();
+
+                }
+/// >new update [index] "string" or new update "string"
+        else if (line.indexOf('new update') > -1) {
+                    var index = obj.updates.length,
+                        newString;
+
+                    try {
+                        newString = line.match(/"(.*?)"/)[1];
+                    } catch (e) {
+                        return console.log("Use 'new update [index] \"string\"' or 'new update \"string\"'".yellow);
+                    }
+
+                    if(line.split(' ')[2].length === 1){
+                        index = line.split(' ')[2] - 1;
+                        current.update(newString, index);
+                    } else {
+                        current.update(newString);
+                    }
+
+                    display.new(obj.updates, (index + 1));
+                
+                }
+/// >delete update [index]
+// TODO:  match.deleteUpdate();
+                else if (line.indexOf('delete update') > -1) {
+                    var index = line.split(' ')[2];
+                    
+                    current.deleteUpdate(index, function(removed){
+                        display.deleted(obj.updates, removed, index);
+                    });
+
+                }
+/// print >updates 
+                else if (line.indexOf('updates') > -1) {             
+                    display.print(obj.updates);
+
+                }
+/// start stream/thread 
+                else if (line.indexOf('start') > -1) {
+                    reddit.post(current.data);
+                    if(current.data.xsub){ setTimeout(reddit.xpost, 300000); }
+                }
 // Otherwise. . .
         else {
             console.log('UNKNOWN COMMAND: `' + line.trim() + '`');
@@ -215,6 +279,7 @@ var match = function(){
             data.thread = {};
 
         match.input = function(input){
+            match.name = input.name;
             data.home.team = input.homeTeam;
             data.home.username =  input.homeUsername.toLowerCase();
             data.away.team =  input.awayTeam;
